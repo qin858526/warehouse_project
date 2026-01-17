@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>货物出库</title>
+    <style>
+        /* 基础样式（仅保留核心，无laydate自定义） */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .form-container {
+            display: inline-block;
+            text-align: left;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        .form-item {
+            margin: 15px 0;
+        }
+        label {
+            display: inline-block;
+            width: 120px;
+            font-weight: bold;
+        }
+        select, input {
+            padding: 8px;
+            width: 220px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        /* 时间输入框+日历图标 */
+        .time-input-group {
+            position: relative;
+            display: inline-block;
+            width: 220px;
+        }
+        .time-input {
+            padding-right: 30px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .calendar-icon {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 2;
+        }
+        .submit-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .submit-btn:hover {
+            background-color: #3367D6;
+        }
+        .back-btn {
+            display: block;
+            margin-top: 20px;
+            color: #4285F4;
+            text-decoration: none;
+        }
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .form-container {
+                width: 80%;
+            }
+            label, .time-input-group {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .time-input {
+                width: 100%;
+            }
+        }
+
+        /* ========== 新增：弹窗样式 ========== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            min-width: 300px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        .modal-success {
+            border-left: 5px solid #2e7d32;
+        }
+        .modal-error {
+            border-left: 5px solid #c62828;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .modal-success .modal-title {
+            color: #2e7d32;
+        }
+        .modal-error .modal-title {
+            color: #c62828;
+        }
+        .modal-close {
+            margin-top: 15px;
+            padding: 6px 15px;
+            background: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+    <!-- 路径保持和你实际一致 -->
+    <link rel="stylesheet" href="/static/laydate/theme/default/laydate.css">
+    <script src="/static/laydate/laydate.js"></script>
+</head>
+<body>
+    <h1>货物出库</h1>
+
+    <!-- ========== 新增：弹窗容器 ========== -->
+    <div class="modal" id="tipModal">
+        <div class="modal-content" id="modalContent">
+            <div class="modal-title" id="modalTitle"></div>
+            <div id="modalMsg"></div>
+            <button class="modal-close" onclick="closeModal()">确定</button>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-item">
+                <label for="product_model">产品型号：</label>
+                <select name="product_model" id="product_model" required>
+                    <option value="">请选择型号</option>
+                    <option value="型号A">型号A</option>
+                    <option value="型号B">型号B</option>
+                    <option value="型号C">型号C</option>
+                    <option value="型号D">型号D</option>
+                </select>
+            </div>
+            <div class="form-item">
+                <label for="material">材质：</label>
+                <select name="material" id="material" required>
+                    <option value="">请选择材质</option>
+                    <option value="材质1">材质1</option>
+                    <option value="材质2">材质2</option>
+                    <option value="材质3">材质3</option>
+                    <option value="材质4">材质4</option>
+                    <option value="材质5">材质5</option>
+                </select>
+            </div>
+            <div class="form-item">
+                <label for="out_quantity">出库数量：</label>
+                <input type="number" name="out_quantity" id="out_quantity" min="1" required placeholder="请输入数量">
+            </div>
+            <div class="form-item">
+                <label for="customer_unit">客户单位：</label>
+                <input type="text" name="customer_unit" id="customer_unit" required placeholder="请输入客户单位">
+            </div>
+            <div class="form-item">
+                <label for="out_time">出库时间：</label>
+                <div class="time-input-group">
+                    <input type="text" name="out_time" id="out_time" class="time-input"
+                           placeholder="选择年月日时分秒" readonly>
+                    <span class="calendar-icon" id="calendarIcon">📅</span>
+                </div>
+            </div>
+            <div class="form-item">
+                <label for="remarks">备注信息：</label>
+                <input type="text" name="remarks" id="remarks" placeholder="请输入备注（可选）">
+            </div>
+            <div class="form-item" style="text-align: center;">
+                <button type="submit" class="submit-btn">确认出库</button>
+            </div>
+        </form>
+    </div>
+    <a href="/" class="back-btn">← 返回首页</a>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            const timeInput = document.getElementById('out_time');
+            const calendarIcon = document.getElementById('calendarIcon');
+
+            // 容错校验
+            if (!timeInput || !calendarIcon) {
+                alert('时间输入框元素未找到！');
+                return;
+            }
+            if (typeof laydate === 'undefined') {
+                alert('laydate加载失败，请检查路径：/static/laydate/laydate.js！');
+                return;
+            }
+
+            // 预填当前时间（精确到秒）
+            const now = new Date();
+            const formattedTime = now.getFullYear() + '-' + 
+                                 String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                                 String(now.getDate()).padStart(2, '0') + ' ' + 
+                                 String(now.getHours()).padStart(2, '0') + ':' + 
+                                 String(now.getMinutes()).padStart(2, '0') + ':' + 
+                                 String(now.getSeconds()).padStart(2, '0');
+            timeInput.value = formattedTime;
+
+            // 初始化laydate（默认样式，仅保留核心功能）
+            laydate.render({
+                elem: '#out_time',
+                type: 'datetime', // 年月日时分秒
+                btns: ['confirm', 'now'], // 保留默认按钮
+                done: function(value) {
+                    timeInput.value = value;
+                }
+            });
+
+            // 点击日历图标触发输入框点击
+            calendarIcon.onclick = function() {
+                timeInput.click();
+            };
+
+            // ========== 新增：弹窗渲染逻辑（读取flask flash消息） ==========
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                    showModal('{{ category }}', '{{ message }}');
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+        });
+
+        // ========== 新增：弹窗显示/关闭函数 ==========
+        function showModal(type, msg) {
+            const modal = document.getElementById('tipModal');
+            const modalContent = document.getElementById('modalContent');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMsg = document.getElementById('modalMsg');
+
+            modalContent.className = 'modal-content';
+            if (type === 'success') {
+                modalContent.classList.add('modal-success');
+                modalTitle.textContent = '操作成功';
+            } else {
+                modalContent.classList.add('modal-error');
+                modalTitle.textContent = '操作失败';
+            }
+            modalMsg.textContent = msg;
+            modal.style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('tipModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

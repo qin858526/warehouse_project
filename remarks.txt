@@ -1,0 +1,22 @@
+1. 启动程序
+将上述所有文件按项目结构放置好（确保app.py和templates文件夹在同一目录）
+打开命令行，进入项目根目录（例如cd D:\warehouse_system）
+执行命令启动程序：
+bash
+运行
+python app.py
+启动成功后，命令行会显示：* Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2. 访问系统
+打开任意浏览器，输入地址 http://127.0.0.1:5000，即可进入系统首页，实现以下功能：
+点击「查询当前库存」：查看所有货物的实时库存
+点击「货物入库」：下拉选择产品型号、材质，输入入库数量，提交后自动同步入库表和总库存表
+点击「货物出库」：下拉选择产品型号、材质，输入出库数量和客户单位，系统会先校验库存是否充足，充足则同步出库表和总库存表
+3. 数据查看
+数据库文件warehouse.db会自动生成在项目根目录
+可使用 SQLite 可视化工具（如 SQLite Studio、Navicat）打开该文件，查看warehouse_in（入库记录）、warehouse_out（出库记录）、total_inventory（总库存）三张表的所有数据
+四、可扩展优化（可选）
+扩展下拉框数据：修改app.py中product_models和materials列表，或新增数据库表存储型号 / 材质，实现动态下拉框
+添加用户认证：使用 Flask-Login 实现登录功能，限制系统访问权限
+数据导出：添加 Excel 导出功能（使用 openpyxl 库），支持库存 / 入库 / 出库数据导出
+分页查询：当数据量较大时，使用 Flask-SQLAlchemy 实现分页展示
+修改端口 / 关闭调试模式：生产环境中，修改app.run(debug=True, port=8080)，关闭debug=True，并指定自定义端口

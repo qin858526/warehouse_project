@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>总库存查询</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .inventory-table th, .inventory-table td {
+            border: 1px solid #bdbdbd;
+            padding: 10px;
+            text-align: center;
+        }
+        .inventory-table th {
+            background-color: #e3e3e3;
+            font-weight: bold;
+        }
+        .inventory-table tr:hover {
+            background-color: #c8d4e6 !important;
+        }
+        /* .inventory-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        } */
+        .expand-btn {
+            padding: 5px 10px;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .expand-btn:hover {
+            background-color: #3367D6;
+        }
+        .record-row {
+            background-color: #f9f9f9;
+        }
+        .record-container {
+            padding: 0px;
+        }
+        .record-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0px;
+            display: none;
+        }
+        .record-table th {
+            background-color: #eee;
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .record-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        /* .record-table tr:nth-child(even), 
+        .record-table tr:nth-child(odd) {
+            background: none !important;
+        } */
+        .record-table .in-record {
+            background-color: #e8f5e9 !important;
+            color: #2e7d32 !important;
+        }
+        .record-table .out-record {
+            background-color: #ffebee !important;
+            color: #c62828 !important;
+        }
+        .record-table .in-record:hover {
+            background-color: #c8e6c9 !important;
+        }
+        .record-table .out-record:hover {
+            background-color: #ffcdd2 !important;
+        }
+        .loading, .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            display: none;
+        }
+        .loading {
+            color: #4285F4;
+        }
+        .back-btn {
+            display: block;
+            text-align: center;
+            width: 10%;
+            margin: 20px auto;
+            text-decoration: none;
+            color: #4285F4;
+        }
+
+        /* 新增：分页样式 */
+        .pagination {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .pagination a {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 0px 4px;
+            border: 1px solid #4285F4;
+            border-radius: 4px;
+            color: #4285F4;
+            text-decoration: none;
+        }
+        .pagination a.active {
+            background-color: #4285F4;
+            color: white;
+        }
+        .pagination a.disabled {
+            border-color: #ccc;
+            color: #ccc;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>总库存查询</h1>
+    <table class="inventory-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>产品型号</th>
+                <th>材质</th>
+                <th>库存数量</th>
+                <th>出入库记录（仅显示最新10条记录）</th>
+                <th>备注</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in stocks %}
+            <tr class="inventory-row" data-model="{{ stock.product_model }}" data-material="{{ stock.material }}">
+                <td>{{ stock.id }}</td>
+                <td>{{ stock.product_model }}</td>
+                <td>{{ stock.material }}</td>
+                <td>{{ stock.stock_quantity }}</td>
+                <td>
+                    <button class="expand-btn">展开记录</button>
+                </td>
+                <td>{{ stock.remarks or '-' }}</td>
+            </tr>
+            <tr class="record-row" style="display: none;">
+                <td colspan="6" style="padding: 0; border: none;">
+                    <div class="record-container">
+                        <div class="loading">🔄 加载入库/出库记录中...</div>
+                        <div class="no-data">暂无该产品的入库/出库记录</div>
+                        <table class="record-table">
+                            <thead>
+                                <tr>
+                                    <th>操作类型</th>
+                                    <th>数量</th>
+                                    <th>客户/供应商</th>
+                                    <th>操作时间（仅显示最新10条记录）</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody class="record-body"></tbody>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 新增：库存查询分页按钮 -->
+    <div class="pagination">
+        <a href="/query_inventory?page={{ current_page - 1 }}" 
+           class="{{ 'disabled' if current_page <= 1 else '' }}">上一页</a>
+        {% for p in range(1, total_pages + 1) %}
+            {% if p >= current_page - 1 and p <= current_page + 1 %}
+                <a href="/query_inventory?page={{ p }}" 
+                   class="{{ 'active' if p == current_page else '' }}">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+        <a href="/query_inventory?page={{ current_page + 1 }}" 
+           class="{{ 'disabled' if current_page >= total_pages else '' }}">下一页</a>
+        <span>共 {{ total_pages }} 页</span>
+    </div>
+
+    <a href="{{ url_for('index') }}" class="back-btn">← 返回首页</a>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.expand-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const inventoryRow = this.closest('.inventory-row');
+                    const productModel = inventoryRow.dataset.model;
+                    const material = inventoryRow.dataset.material;
+                    const recordRow = inventoryRow.nextElementSibling;
+                    const loading = recordRow.querySelector('.loading');
+                    const noData = recordRow.querySelector('.no-data');
+                    const recordTable = recordRow.querySelector('.record-table');
+                    const recordBody = recordRow.querySelector('.record-body');
+
+                    if (recordRow.style.display === 'none') {
+                        recordRow.style.display = 'table-row';
+                        loading.style.display = 'block';
+                        noData.style.display = 'none';
+                        recordTable.style.display = 'none';
+
+                        fetch('/api/get_stock_records', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({product_model: productModel, material: material})
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            loading.style.display = 'none';
+                            if (data.code === 0 && data.records.length > 0) {
+                                recordTable.style.display = 'table';
+                                recordBody.innerHTML = '';
+                                data.records.forEach(record => {
+                                    const tr = document.createElement('tr');
+                                    tr.className = record.type === '入库' ? 'in-record' : 'out-record';
+                                    tr.innerHTML = `
+                                        <td>${record.type}</td>
+                                        <td>${record.quantity}</td>
+                                        <td>${record.unit || '-'}</td>
+                                        <td>${record.operate_time}</td>
+                                        <td>${record.remarks || '-'}</td>
+                                    `;
+                                    recordBody.appendChild(tr);
+                                });
+                            } else {
+                                noData.style.display = 'block';
+                            }
+                        })
+                        .catch(error => {
+                            loading.style.display = 'none';
+                            noData.style.display = 'block';
+                            noData.textContent = '加载失败，请刷新重试';
+                        });
+                        this.textContent = '收起记录';
+                    } else {
+                        recordRow.style.display = 'none';
+                        recordBody.innerHTML = '';
+                        this.textContent = '展开记录';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

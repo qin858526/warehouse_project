@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>库存查询</title>
+    <style>
+        /* 保留你原有所有样式，新增分页样式 */
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 80%; margin: 20px auto; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .back { text-align: center; margin-top: 20px; }
+        .back a { color: #4285F4; text-decoration: none; }
+
+        /* 新增：分页按钮样式（和你原有样式兼容） */
+        .pagination { text-align: center; margin: 20px 0; }
+        .pagination a {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 0 4px;
+            border: 1px solid #4285F4;
+            border-radius: 4px;
+            color: #4285F4;
+            text-decoration: none;
+        }
+        .pagination a.active {
+            background-color: #4285F4;
+            color: white;
+        }
+        .pagination a.disabled {
+            border-color: #ccc;
+            color: #ccc;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">库存查询</h1>
+
+    <!-- 你原有库存表格（完全不动） -->
+    <table>
+        <tr>
+            <th>产品型号</th>
+            <th>材质</th>
+            <th>库存数量</th>
+            <th>备注信息</th>
+        </tr>
+        {% for stock in stocks %}
+        <tr>
+            <td>{{ stock.product_model }}</td>
+            <td>{{ stock.material }}</td>
+            <td>{{ stock.stock_quantity }}</td>
+            <td>{{ stock.remarks }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <!-- 新增：分页按钮（放在表格下方、返回首页上方） -->
+    <div class="pagination">
+        <!-- 上一页：当前页>1才可用 -->
+        <a href="/query_inventory?page={{ current_page - 1 }}" 
+           class="{{ 'disabled' if current_page <= 1 else '' }}">上一页</a>
+        
+        <!-- 页码显示（只显示当前页±1，避免页码过多） -->
+        {% for p in range(1, total_pages + 1) %}
+            {% if p >= current_page - 1 and p <= current_page + 1 %}
+                <a href="/query_inventory?page={{ p }}" 
+                   class="{{ 'active' if p == current_page else '' }}">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+
+        <!-- 下一页：当前页<总页数才可用 -->
+        <a href="/query_inventory?page={{ current_page + 1 }}" 
+           class="{{ 'disabled' if current_page >= total_pages else '' }}">下一页</a>
+        
+        <!-- 辅助提示（可选） -->
+        <span>共 {{ total_pages }} 页 / {{ total_pages * per_page }} 条</span>
+    </div>
+
+    <!-- 你原有返回首页（完全不动） -->
+    <div class="back">
+        <a href="/">← 返回首页</a>
+    </div>
+</body>
+</html>

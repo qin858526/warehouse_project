@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仓库管理系统</title>
+    <style>
+        /* 全局重置 + 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4eaf5 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* 标题样式 */
+        h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            letter-spacing: 2px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: #4285F4;
+            border-radius: 3px;
+        }
+
+        /* 总按钮容器：按模块垂直排列，间距更大 */
+        .btn-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 40px; /* 两个模块之间的大间距，强化分类 */
+            max-width: 900px;
+            width: 100%;
+        }
+
+        /* 模块标题：区分操作/查询类，提升层级 */
+        .module-title {
+            color: #4a5568;
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* 模块容器：每个分类的按钮容器 */
+        .module-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* 按钮基础样式（保留原有高级感） */
+        .btn {
+            flex: 1;
+            min-width: 160px;
+            max-width: 200px;
+            padding: 16px 24px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* 操作类按钮（入库/出库）：主色偏蓝绿，区分查询类 */
+        .btn.operation {
+            background-color: #38b2ac;
+        }
+        .btn.operation:hover {
+            background-color: #319795;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(56, 178, 172, 0.3);
+        }
+        .btn.operation:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(56, 178, 172, 0.2);
+        }
+
+        /* 查询类按钮（库存/历史）：保留原蓝色，统一风格 */
+        .btn.query {
+            background-color: #4285F4;
+        }
+        .btn.query:hover {
+            background-color: #3367D6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(66, 133, 244, 0.3);
+        }
+        .btn.query:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 40px;
+            }
+            .module-title {
+                font-size: 1.1rem;
+            }
+            .btn {
+                min-width: 140px;
+                padding: 14px 20px;
+                font-size: 0.9rem;
+            }
+            .btn-wrapper {
+                gap: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>仓库管理系统</h1>
+    
+    <!-- 总按钮容器：按模块分类 -->
+    <div class="btn-wrapper">
+        <!-- 第一模块：核心操作（入库/出库） -->
+        <div class="operation-module">
+            <div class="module-title">出入库操作</div>
+            <div class="module-container">
+                <a href="/in_stock" class="btn operation">货物入库</a>
+                <a href="/out_stock" class="btn operation">货物出库</a>
+            </div>
+        </div>
+
+        <!-- 第二模块：数据查询（库存/历史） -->
+        <div class="query-module">
+            <div class="module-title">数据查询</div>
+            <div class="module-container">
+                <a href="/query_total" class="btn query">库存查询</a>
+                <a href="/query_in_history" class="btn query">入库历史</a>
+                <a href="/query_out_history" class="btn query">出库历史</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

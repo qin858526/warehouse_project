@@ -1,0 +1,33 @@
+# Python编译的缓存文件，必忽略
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python虚拟环境（如果你的项目用了venv/虚拟环境，必忽略，不要提交环境）
+venv/
+env/
+ENV/
+env3/
+.venv/
+
+# 日志文件（仓库系统运行产生的日志）
+*.log
+
+# 临时文件
+*.tmp
+*.bak
+
+# IDE编辑器的配置文件（Pycharm/VSCode的配置，自己用就行，不用提交）
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Windows系统的隐藏文件
+Thumbs.db
+.DS_Store
+
+# 如果你的项目有本地数据库文件（比如sqlite的.db文件），需要的话加这行
+*.db
