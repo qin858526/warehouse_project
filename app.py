@@ -343,4 +343,4 @@ if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8888)
     # -w 4：开启4个工作进程（根据电脑性能调整）
     # -b 0.0.0.0:5000：绑定所有网卡+5000端口
-    # gunicorn -w 4 -b 0.0.0.0:5000 app:app 
+    # gunicorn -w 4 -b 0.0.0.0:5000 app:app
