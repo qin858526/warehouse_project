@@ -12,6 +12,53 @@
             text-align: center;
             color: #333;
         }
+        /* 新增：筛选表单样式（匹配原有风格） */
+        .filter-panel {
+            margin: 10px auto 20px;
+            padding: 15px;
+            width: 95%;
+            border: 1px solid #bdbdbd;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        .filter-panel .form-item {
+            margin-right: 20px;
+            display: inline-block;
+        }
+        .filter-panel label {
+            margin-right: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        .filter-panel input {
+            padding: 6px 8px;
+            border: 1px solid #bdbdbd;
+            border-radius: 4px;
+            width: 180px;
+        }
+        .filter-panel button {
+            padding: 6px 16px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .filter-btn {
+            background-color: #4285F4;
+            color: white;
+        }
+        .filter-btn:hover {
+            background-color: #3367D6;
+        }
+        .reset-btn {
+            background-color: #e3e3e3;
+            color: #333;
+        }
+        .reset-btn:hover {
+            background-color: #d0d0d0;
+        }
+        /* 原有样式保留 */
         .inventory-table {
             width: 100%;
             border-collapse: collapse;
@@ -29,9 +76,6 @@
         .inventory-table tr:hover {
             background-color: #c8d4e6 !important;
         }
-        /* .inventory-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        } */
         .expand-btn {
             padding: 5px 10px;
             background-color: #4285F4;
@@ -67,10 +111,6 @@
             padding: 8px;
             text-align: center;
         }
-        /* .record-table tr:nth-child(even), 
-        .record-table tr:nth-child(odd) {
-            background: none !important;
-        } */
         .record-table .in-record {
             background-color: #e8f5e9 !important;
             color: #2e7d32 !important;
@@ -102,8 +142,6 @@
             text-decoration: none;
             color: #4285F4;
         }
-
-        /* 新增：分页样式 */
         .pagination {
             text-align: center;
             margin: 20px 0;
@@ -131,6 +169,38 @@
 </head>
 <body>
     <h1>总库存查询</h1>
+
+    <!-- 新增：筛选表单 -->
+    <div class="filter-panel">
+        <form method="GET" action="/query_total">
+            <div class="form-item">
+                <label>产品型号：</label>
+                <input type="text" name="product_model" placeholder="模糊查询型号" 
+                       value="{{ request.args.get('product_model', '') }}">
+            </div>
+            <div class="form-item">
+                <label>材质：</label>
+                <input type="text" name="material" placeholder="模糊查询材质" 
+                       value="{{ request.args.get('material', '') }}">
+            </div>
+            <div class="form-item">
+                <label>库存≥：</label>
+                <input type="number" name="stock_min" min="0" 
+                       value="{{ request.args.get('stock_min', '') }}">
+            </div>
+            <div class="form-item">
+                <label>库存≤：</label>
+                <input type="number" name="stock_max" min="0" 
+                       value="{{ request.args.get('stock_max', '') }}">
+            </div>
+            <!-- 隐藏字段：保留当前页码，筛选后回到第1页 -->
+            <input type="hidden" name="page" value="1">
+            <button type="submit" class="filter-btn">筛选</button>
+            <button type="button" class="reset-btn" onclick="window.location.href='/query_total'">重置</button>
+        </form>
+    </div>
+
+    <!-- 原有库存表格（无修改） -->
     <table class="inventory-table">
         <thead>
             <tr>
@@ -178,23 +248,36 @@
         </tbody>
     </table>
 
-    <!-- 新增：库存查询分页按钮 -->
+    <!-- 原有分页（适配筛选参数：分页时保留筛选条件） -->
     <div class="pagination">
-        <a href="/query_inventory?page={{ current_page - 1 }}" 
+        <a href="/query_inventory?page={{ current_page - 1 }}
+               {% if request.args.get('product_model') %}&product_model={{ request.args.get('product_model') }}{% endif %}
+               {% if request.args.get('material') %}&material={{ request.args.get('material') }}{% endif %}
+               {% if request.args.get('stock_min') %}&stock_min={{ request.args.get('stock_min') }}{% endif %}
+               {% if request.args.get('stock_max') %}&stock_max={{ request.args.get('stock_max') }}{% endif %}" 
            class="{{ 'disabled' if current_page <= 1 else '' }}">上一页</a>
         {% for p in range(1, total_pages + 1) %}
             {% if p >= current_page - 1 and p <= current_page + 1 %}
-                <a href="/query_inventory?page={{ p }}" 
+                <a href="/query_inventory?page={{ p }}
+                       {% if request.args.get('product_model') %}&product_model={{ request.args.get('product_model') }}{% endif %}
+                       {% if request.args.get('material') %}&material={{ request.args.get('material') }}{% endif %}
+                       {% if request.args.get('stock_min') %}&stock_min={{ request.args.get('stock_min') }}{% endif %}
+                       {% if request.args.get('stock_max') %}&stock_max={{ request.args.get('stock_max') }}{% endif %}" 
                    class="{{ 'active' if p == current_page else '' }}">{{ p }}</a>
             {% endif %}
         {% endfor %}
-        <a href="/query_inventory?page={{ current_page + 1 }}" 
+        <a href="/query_inventory?page={{ current_page + 1 }}
+               {% if request.args.get('product_model') %}&product_model={{ request.args.get('product_model') }}{% endif %}
+               {% if request.args.get('material') %}&material={{ request.args.get('material') }}{% endif %}
+               {% if request.args.get('stock_min') %}&stock_min={{ request.args.get('stock_min') }}{% endif %}
+               {% if request.args.get('stock_max') %}&stock_max={{ request.args.get('stock_max') }}{% endif %}" 
            class="{{ 'disabled' if current_page >= total_pages else '' }}">下一页</a>
         <span>共 {{ total_pages }} 页</span>
     </div>
 
     <a href="{{ url_for('index') }}" class="back-btn">← 返回首页</a>
 
+    <!-- 原有JS（无修改） -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.expand-btn').forEach(btn => {

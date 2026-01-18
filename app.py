@@ -63,23 +63,53 @@ def index():
 
 # 库存查询
 @app.route('/query_total', methods=['GET'])
-def query_total():  # 函数名保持你的query，不改动
+def query_total():
+
+    # 筛选参数
+    product_model = request.args.get('product_model', '').strip()
+    material = request.args.get('material', '').strip()
+    stock_min = request.args.get('stock_min', '')
+    stock_max = request.args.get('stock_max', '')
+
     # 1. 获取分页参数：页码（默认第1页）、每页显示10条（可自定义）
     page = request.args.get('page', 1, type=int)  # 从URL获取?page=X参数
-    per_page = 15  # 每页固定显示10条，可改成20/50
+    per_page = 10  # 每页固定显示10条，可改成20/50
 
     # 2. 计算分页偏移量（OFFSET）：(页码-1)*每页条数
     offset = (page - 1) * per_page
 
+    # 基础SQL（统计总数+查询数据）
+    count_sql = f"SELECT COUNT(*) FROM total_inventory WHERE 1=1"
+    data_sql = f"SELECT * FROM total_inventory WHERE 1=1"
+    params = []
+
+    # 拼接筛选条件
+    if product_model:
+        count_sql += " AND product_model LIKE ?"
+        data_sql += " AND product_model LIKE ?"
+        params.append(f"%{product_model}%")
+    if material:
+        count_sql += " AND material LIKE ?"
+        data_sql += " AND material LIKE ?"
+        params.append(f"%{material}%")
+    if stock_min.isdigit():
+        count_sql += " AND stock_quantity >= ?"
+        data_sql += " AND stock_quantity >= ?"
+        params.append(int(stock_min))
+    if stock_max.isdigit():
+        count_sql += " AND stock_quantity <= ?"
+        data_sql += " AND stock_quantity <= ?"
+        params.append(int(stock_max))
+
     # 3. 数据库查询：当前页数据 + 总数据条数（适配你的表名）
     conn = get_db_connection()
-    # 查当前页数据：LIMIT限制条数，OFFSET跳过前N条（核心分页逻辑）
-    stocks = conn.execute(
-        'SELECT * FROM total_inventory LIMIT ? OFFSET ?',  # 你的库存表名不变
-        (per_page, offset)
-    ).fetchall()
-    # 查总条数：用于计算总页数
-    total_count = conn.execute('SELECT COUNT(*) FROM total_inventory').fetchone()[0]
+    # 统计符合条件的总条数
+    total_count = conn.execute(count_sql, params).fetchone()[0]
+    # 计算总页数
+    total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+    # 分页查询数据
+    data_sql += f" LIMIT {per_page} OFFSET {offset}"
+    stocks = conn.execute(data_sql, params).fetchall()
     conn.close()
 
     # 4. 计算总页数（向上取整，比如11条=2页）
