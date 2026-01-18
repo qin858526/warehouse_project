@@ -68,6 +68,8 @@ def query_total():
     # 筛选参数
     product_model = request.args.get('product_model', '').strip()
     material = request.args.get('material', '').strip()
+    model_filter = request.args.get('model', '')  # 产品型号筛选值
+    material_filter = request.args.get('material', '')  # 材质筛选值
     stock_min = request.args.get('stock_min', '')
     stock_max = request.args.get('stock_max', '')
 
@@ -82,6 +84,15 @@ def query_total():
     count_sql = f"SELECT COUNT(*) FROM total_inventory WHERE 1=1"
     data_sql = f"SELECT * FROM total_inventory WHERE 1=1"
     params = []
+    #新筛选
+    query = "SELECT * FROM total_inventory WHERE 1=1"  # 1=1方便拼接条件
+    params = []
+    if model_filter:
+        query += " AND product_model = ?"
+        params.append(model_filter)
+    if material_filter:
+        query += " AND material = ?"
+        params.append(material_filter)
 
     # 拼接筛选条件
     if product_model:
@@ -101,27 +112,49 @@ def query_total():
         data_sql += " AND stock_quantity <= ?"
         params.append(int(stock_max))
 
-    # 3. 数据库查询：当前页数据 + 总数据条数（适配你的表名）
+    # 3. 数据库查询：当前页数据 + 总数据条数（适配你的表名）----------旧版
+    # conn = get_db_connection()
+    # # 统计符合条件的总条数
+    # total_count = conn.execute(count_sql, params).fetchone()[0]
+    # # 计算总页数
+    # total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+    # # 分页查询数据
+    # data_sql += f" LIMIT {per_page} OFFSET {offset}"
+    # stocks = conn.execute(data_sql, params).fetchall()
+    # conn.close()
+
+    # # 4. 计算总页数（向上取整，比如11条=2页）
+    # total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
+
+    # # 5. 传递参数到你的query.html（模板名不变）
+    # return render_template(
+    #     'query.html',  # 你的库存查询页模板名：query.html
+    #     stocks=stocks,  # 库存数据（模板里遍历的变量名不变）
+    #     current_page=page,  # 新增：当前页码
+    #     total_pages=total_pages,  # 新增：总页数
+    #     per_page=per_page  # 新增：每页条数（可选）
+    # )
+
+    # 先查询总条数（用于分页）
     conn = get_db_connection()
-    # 统计符合条件的总条数
-    total_count = conn.execute(count_sql, params).fetchone()[0]
-    # 计算总页数
-    total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
-    # 分页查询数据
-    data_sql += f" LIMIT {per_page} OFFSET {offset}"
-    stocks = conn.execute(data_sql, params).fetchall()
+    cursor = conn.cursor()
+    cursor.execute(query.replace("*", "COUNT(*)"), params)
+    total = cursor.fetchone()[0]
+    total_pages = max(1, (total + per_page - 1) // per_page)  # 总页数
+
+    # 添加分页限制
+    query += " LIMIT ? OFFSET ?"
+    params.extend([per_page, (page - 1) * per_page])
+    cursor.execute(query, params)
+    stocks = cursor.fetchall()  # 实际项目中建议转换为字典列表
     conn.close()
 
-    # 4. 计算总页数（向上取整，比如11条=2页）
-    total_pages = math.ceil(total_count / per_page) if total_count > 0 else 1
-
-    # 5. 传递参数到你的query.html（模板名不变）
+    # 传递数据到模板
     return render_template(
-        'query.html',  # 你的库存查询页模板名：query.html
-        stocks=stocks,  # 库存数据（模板里遍历的变量名不变）
-        current_page=page,  # 新增：当前页码
-        total_pages=total_pages,  # 新增：总页数
-        per_page=per_page  # 新增：每页条数（可选）
+        'query.html',
+        stocks=stocks,
+        current_page=page,
+        total_pages=total_pages
     )
 
 # 入库（核心：全局异常捕获，确保数据库提交）
