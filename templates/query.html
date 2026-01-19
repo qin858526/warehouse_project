@@ -247,9 +247,9 @@
                 <th>ID</th>
                 <th class="table-header">
                     产品型号
-                    <button class="filter-btn" data-column="model">▼</button>
+                    <button class="filter-btn" data-column="product_model">▼</button>
                     <!-- 产品型号筛选下拉菜单 -->
-                    <div class="filter-dropdown" id="model-dropdown">
+                    <div class="filter-dropdown" id="product_model-dropdown">
                         <div class="filter-option" data-value="">全部</div>
                         <div class="filter-divider"></div>
                         <!-- 选项将通过JS动态生成 -->
@@ -339,10 +339,10 @@
         document.addEventListener('DOMContentLoaded', function() {
 
             // 1. 收集当前页面所有筛选列的唯一值
-            const modelSet = new Set();
+            const productModelSet = new Set();
             const materialSet = new Set();
             document.querySelectorAll('tbody tr').forEach(row => {
-                modelSet.add(row.dataset.model);
+                productModelSet.add(row.dataset.product_model);
                 materialSet.add(row.dataset.material);
             });
 
@@ -359,7 +359,7 @@
                     }
                 });
             }
-            renderOptions('model-dropdown', Array.from(modelSet));
+            renderOptions('product_model-dropdown', Array.from(productModelSet));
             renderOptions('material-dropdown', Array.from(materialSet));
 
             // 3. 下拉菜单显示/隐藏逻辑
@@ -382,7 +382,7 @@
                 document.querySelectorAll('.filter-dropdown').forEach(d => d.style.display = 'none');
             });
 
-            // 4. 筛选选项点击事件（跳转带筛选参数的URL）
+            // 4. 下拉筛选选项点击事件（跳转带筛选参数的URL+同步更新手动筛选输入框的值）
             document.querySelectorAll('.filter-option').forEach(option => {
                 option.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -393,17 +393,26 @@
                     const params = new URLSearchParams(window.location.search);
                     params.set(column, value); // 设置筛选值
                     params.set('page', 1); // 筛选后重置到第1页
+
+                    // 同步更新手动筛选输入框的值（关键：保持状态一致）
+                    if (column === 'product_model') {
+                        document.querySelector('input[name="product_model"]').value = value;
+                    } else if (column === 'material') {
+                        document.querySelector('input[name="material"]').value = value;
+                    }
+
                     window.location.href = `/query_total?${params.toString()}`;
                 });
             });
 
             // 5. 回显当前筛选状态（高亮选中项）
             const params = new URLSearchParams(window.location.search);
-            const activeModel = params.get('model') || '';
+            const activeProductModel = params.get('model') || '';
             const activeMaterial = params.get('material') || '';
 
-            document.querySelectorAll('#model-dropdown .filter-option').forEach(option => {
-                if (option.dataset.value === activeModel) option.classList.add('active');
+            // 下拉选项高亮
+            document.querySelectorAll('#product_model-dropdown .filter-option').forEach(option => {
+                if (option.dataset.value === activeProductModel) option.classList.add('active');
             });
             document.querySelectorAll('#material-dropdown .filter-option').forEach(option => {
                 if (option.dataset.value === activeMaterial) option.classList.add('active');

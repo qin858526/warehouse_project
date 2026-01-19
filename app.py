@@ -82,11 +82,9 @@ def query_total():
 
     # 基础SQL（统计总数+查询数据）
     count_sql = f"SELECT COUNT(*) FROM total_inventory WHERE 1=1"
-    data_sql = f"SELECT * FROM total_inventory WHERE 1=1"
     params = []
     #新筛选
     query = "SELECT * FROM total_inventory WHERE 1=1"  # 1=1方便拼接条件
-    params = []
     if model_filter:
         query += " AND product_model = ?"
         params.append(model_filter)
@@ -94,22 +92,34 @@ def query_total():
         query += " AND material = ?"
         params.append(material_filter)
 
-    # 拼接筛选条件
+    # 拼接筛选条件（下拉）
+    # 若用户通过下拉选择了具体值（非空），则精确匹配
+    # 若用户手动输入了内容（非下拉），则模糊匹配
+    # （通过是否存在于唯一值集合判断？简化处理：下拉选择的是精确值，手动输入可能包含通配符）
+    # 这里采用：只要有值，下拉和手动输入统一处理为“若值不含%则精确，含%则模糊”
     if product_model:
-        count_sql += " AND product_model LIKE ?"
-        data_sql += " AND product_model LIKE ?"
-        params.append(f"%{product_model}%")
+        if '%' in product_model:
+            query += " AND product_model LIKE ?"
+            count_sql += " AND product_model LIKE ?"
+        else:
+            query += " AND product_model = ?"
+            count_sql += " AND product_model = ?"
+        params.append(product_model)
     if material:
-        count_sql += " AND material LIKE ?"
-        data_sql += " AND material LIKE ?"
+        if '%' in material:
+            query += " AND material LIKE ?"
+            count_sql += " AND material LIKE ?"
+        else:
+            query += " AND material = ?"
+            count_sql += " AND material = ?"
         params.append(f"%{material}%")
     if stock_min.isdigit():
         count_sql += " AND stock_quantity >= ?"
-        data_sql += " AND stock_quantity >= ?"
+        query += " AND stock_quantity >= ?"
         params.append(int(stock_min))
     if stock_max.isdigit():
         count_sql += " AND stock_quantity <= ?"
-        data_sql += " AND stock_quantity <= ?"
+        query += " AND stock_quantity <= ?"
         params.append(int(stock_max))
 
     # 3. 数据库查询：当前页数据 + 总数据条数（适配你的表名）----------旧版
