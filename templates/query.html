@@ -247,9 +247,9 @@
                 <th>ID</th>
                 <th class="table-header">
                     产品型号
-                    <button class="filter-btn" data-column="product_model">▼</button>
+                    <button class="filter-btn" data-column="model_filter">▼</button>
                     <!-- 产品型号筛选下拉菜单 -->
-                    <div class="filter-dropdown" id="product_model-dropdown">
+                    <div class="filter-dropdown" id="model_filter-dropdown">
                         <div class="filter-option" data-value="">全部</div>
                         <div class="filter-divider"></div>
                         <!-- 选项将通过JS动态生成 -->
@@ -310,7 +310,7 @@
     <div class="pagination">
         <a href="/query_total?page={{ current_page - 1 }}
                {% if request.args.get('product_model') %}&product_model={{ request.args.get('product_model') }}{% endif %}
-               {% if request.args.get('model') %}&model={{ request.args.get('model') }}{% endif %}
+               {% if request.args.get('model_filter') %}&model_filter={{ request.args.get('model_filter') }}{% endif %}
                {% if request.args.get('material_filter') %}&material_filter={{ request.args.get('material_filter') }}{% endif %}
                {% if request.args.get('material') %}&material={{ request.args.get('material') }}{% endif %}
                {% if request.args.get('stock_min') %}&stock_min={{ request.args.get('stock_min') }}{% endif %}
@@ -320,7 +320,7 @@
             {% if p >= current_page - 1 and p <= current_page + 1 %}
                 <a href="/query_total?page={{ p }}
                        {% if request.args.get('product_model') %}&product_model={{ request.args.get('product_model') }}{% endif %}
-                       {% if request.args.get('model') %}&model={{ request.args.get('model') }}{% endif %}
+                       {% if request.args.get('model_filter') %}&model_filter={{ request.args.get('model_filter') }}{% endif %}
                        {% if request.args.get('material_filter') %}&material_filter={{ request.args.get('material_filter') }}{% endif %}
                        {% if request.args.get('material') %}&material={{ request.args.get('material') }}{% endif %}
                        {% if request.args.get('stock_min') %}&stock_min={{ request.args.get('stock_min') }}{% endif %}
@@ -330,7 +330,7 @@
         {% endfor %}
         <a href="/query_total?page={{ current_page + 1 }}
                {% if request.args.get('product_model') %}&product_model={{ request.args.get('product_model') }}{% endif %}
-               {% if request.args.get('model') %}&model={{ request.args.get('model') }}{% endif %}
+               {% if request.args.get('model_filter') %}&model_filter={{ request.args.get('model_filter') }}{% endif %}
                {% if request.args.get('material_filter') %}&material_filter={{ request.args.get('material_filter') }}{% endif %}
                {% if request.args.get('material') %}&material={{ request.args.get('material') }}{% endif %}
                {% if request.args.get('stock_min') %}&stock_min={{ request.args.get('stock_min') }}{% endif %}
@@ -365,7 +365,7 @@
                     }
                 });
             }
-            renderOptions('product_model-dropdown', Array.from(productModelSet));
+            renderOptions('model_filter-dropdown', Array.from(productModelSet));
             renderOptions('material_filter-dropdown', Array.from(materialSet));
 
             // 3. 下拉菜单显示/隐藏逻辑
@@ -401,9 +401,11 @@
                     params.set('page', 1); // 筛选后重置到第1页
 
                     // 同步更新手动筛选输入框的值（关键：保持状态一致）
-                    if (column === 'product_model') {material
+                    if (column === 'model_filter') {
+                        params.set('product_model', value);
                         document.querySelector('input[name="product_model"]').value = value;
                     } else if (column === 'material_filter') {
+                        params.set('material', value);
                         document.querySelector('input[name="material"]').value = value;
                     }
 
@@ -413,11 +415,11 @@
 
             // 5. 回显当前筛选状态（高亮选中项）
             const params = new URLSearchParams(window.location.search);
-            const activeProductModel = params.get('model') || '';
+            const activeProductModel = params.get('model_filter') || '';
             const activeMaterial = params.get('material_filter') || '';
 
             // 下拉选项高亮
-            document.querySelectorAll('#product_model-dropdown .filter-option').forEach(option => {
+            document.querySelectorAll('#model_filter-dropdown .filter-option').forEach(option => {
                 if (option.dataset.value === activeProductModel) option.classList.add('active');
             });
             document.querySelectorAll('#material_filter-dropdown .filter-option').forEach(option => {

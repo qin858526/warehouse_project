@@ -67,7 +67,7 @@ def query_total():
 
     # 筛选参数
     # 产品型号：下拉筛选（精确匹配）+ 手动输入（模糊匹配）
-    model_filter = request.args.get('model', '')  # 下拉参数（model）
+    model_filter = request.args.get('model_filter', '')  # 下拉参数（model）
     product_model = request.args.get('product_model', '').strip()  # 手动输入参数
 
     # 材质：下拉筛选（精确匹配）+ 手动输入（模糊匹配）
