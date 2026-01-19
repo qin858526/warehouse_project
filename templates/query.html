@@ -257,9 +257,9 @@
                 </th>
                 <th class="table-header">
                     材质
-                    <button class="filter-btn" data-column="material">▼</button>
+                    <button class="filter-btn" data-column="material_filter">▼</button>
                     <!-- 材质筛选下拉菜单 -->
-                    <div class="filter-dropdown" id="material-dropdown">
+                    <div class="filter-dropdown" id="material_filter-dropdown">
                         <div class="filter-option" data-value="">全部</div>
                         <div class="filter-divider"></div>
                         <!-- 选项将通过JS动态生成 -->
@@ -310,6 +310,8 @@
     <div class="pagination">
         <a href="/query_total?page={{ current_page - 1 }}
                {% if request.args.get('product_model') %}&product_model={{ request.args.get('product_model') }}{% endif %}
+               {% if request.args.get('model') %}&model={{ request.args.get('model') }}{% endif %}
+               {% if request.args.get('material_filter') %}&material_filter={{ request.args.get('material_filter') }}{% endif %}
                {% if request.args.get('material') %}&material={{ request.args.get('material') }}{% endif %}
                {% if request.args.get('stock_min') %}&stock_min={{ request.args.get('stock_min') }}{% endif %}
                {% if request.args.get('stock_max') %}&stock_max={{ request.args.get('stock_max') }}{% endif %}" 
@@ -318,6 +320,8 @@
             {% if p >= current_page - 1 and p <= current_page + 1 %}
                 <a href="/query_total?page={{ p }}
                        {% if request.args.get('product_model') %}&product_model={{ request.args.get('product_model') }}{% endif %}
+                       {% if request.args.get('model') %}&model={{ request.args.get('model') }}{% endif %}
+                       {% if request.args.get('material_filter') %}&material_filter={{ request.args.get('material_filter') }}{% endif %}
                        {% if request.args.get('material') %}&material={{ request.args.get('material') }}{% endif %}
                        {% if request.args.get('stock_min') %}&stock_min={{ request.args.get('stock_min') }}{% endif %}
                        {% if request.args.get('stock_max') %}&stock_max={{ request.args.get('stock_max') }}{% endif %}" 
@@ -326,6 +330,8 @@
         {% endfor %}
         <a href="/query_total?page={{ current_page + 1 }}
                {% if request.args.get('product_model') %}&product_model={{ request.args.get('product_model') }}{% endif %}
+               {% if request.args.get('model') %}&model={{ request.args.get('model') }}{% endif %}
+               {% if request.args.get('material_filter') %}&material_filter={{ request.args.get('material_filter') }}{% endif %}
                {% if request.args.get('material') %}&material={{ request.args.get('material') }}{% endif %}
                {% if request.args.get('stock_min') %}&stock_min={{ request.args.get('stock_min') }}{% endif %}
                {% if request.args.get('stock_max') %}&stock_max={{ request.args.get('stock_max') }}{% endif %}" 
@@ -342,7 +348,7 @@
             const productModelSet = new Set();
             const materialSet = new Set();
             document.querySelectorAll('tbody tr').forEach(row => {
-                productModelSet.add(row.dataset.product_model);
+                productModelSet.add(row.dataset.model);
                 materialSet.add(row.dataset.material);
             });
 
@@ -360,7 +366,7 @@
                 });
             }
             renderOptions('product_model-dropdown', Array.from(productModelSet));
-            renderOptions('material-dropdown', Array.from(materialSet));
+            renderOptions('material_filter-dropdown', Array.from(materialSet));
 
             // 3. 下拉菜单显示/隐藏逻辑
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -397,7 +403,7 @@
                     // 同步更新手动筛选输入框的值（关键：保持状态一致）
                     if (column === 'product_model') {
                         document.querySelector('input[name="product_model"]').value = value;
-                    } else if (column === 'material') {
+                    } else if (column === 'material_filter') {
                         document.querySelector('input[name="material"]').value = value;
                     }
 
