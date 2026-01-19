@@ -220,8 +220,8 @@
             </div>
             <div class="form-item">
                 <label>材质：</label>
-                <input type="text" name="material_filter" placeholder="模糊查询材质" 
-                       value="{{ request.args.get('material_filter', '') }}">
+                <input type="text" name="material" placeholder="模糊查询材质" 
+                       value="{{ request.args.get('material', '') }}">
             </div>
             <div class="form-item">
                 <label>库存≥：</label>
@@ -401,10 +401,10 @@
                     params.set('page', 1); // 筛选后重置到第1页
 
                     // 同步更新手动筛选输入框的值（关键：保持状态一致）
-                    if (column === 'product_model') {
+                    if (column === 'product_model') {material
                         document.querySelector('input[name="product_model"]').value = value;
                     } else if (column === 'material_filter') {
-                        document.querySelector('input[name="material_filter"]').value = value;
+                        document.querySelector('input[name="material"]').value = value;
                     }
 
                     window.location.href = `/query_total?${params.toString()}`;
@@ -413,8 +413,8 @@
 
             // 5. 回显当前筛选状态（高亮选中项）
             const params = new URLSearchParams(window.location.search);
-            const activeProductModel = params.get('model') || '';
-            const activeMaterial = params.get('material') || '';
+            const activeProductModel = params.get('product_model') || '';
+            const activeMaterial = params.get('material_filter') || '';
 
             // 下拉选项高亮
             document.querySelectorAll('#product_model-dropdown .filter-option').forEach(option => {
