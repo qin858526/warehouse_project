@@ -210,6 +210,10 @@
 <body>
     <h1>总库存查询</h1>
 
+    <!-- 存储后端传递的全量型号/材质 -->
+    <input type="hidden" id="all-models" value='{{ all_models|safe }}'>
+    <input type="hidden" id="all-materials" value='{{ all_materials|safe }}'>
+
     <!-- 新增：筛选表单 -->
     <div class="filter-panel">
         <form method="GET" action="/query_total">
@@ -345,6 +349,8 @@
         document.addEventListener('DOMContentLoaded', function() {
 
             // 1. 收集当前页面所有筛选列的唯一值
+            const allModels = JSON.parse(document.getElementById('all-models').value);
+            const allMaterials = JSON.parse(document.getElementById('all-materials').value);
             const productModelSet = new Set();
             const materialSet = new Set();
             document.querySelectorAll('tbody tr').forEach(row => {
@@ -355,6 +361,11 @@
             // 2. 动态生成下拉选项
             function renderOptions(dropdownId, values) {
                 const dropdown = document.getElementById(dropdownId);
+                // 保留"全部"和分隔线，清空原有动态选项
+                dropdown.innerHTML = `
+                    <div class="filter-option" data-value="">全部</div>
+                    <div class="filter-divider"></div>
+                `;
                 values.forEach(value => {
                     if (value) { // 跳过空值
                         const option = document.createElement('div');
@@ -365,8 +376,9 @@
                     }
                 });
             }
-            renderOptions('model_filter-dropdown', Array.from(productModelSet));
-            renderOptions('material_filter-dropdown', Array.from(materialSet));
+            // 渲染下拉选项（改用全量列表）
+            renderOptions('model_filter-dropdown', allModels);
+            renderOptions('material_filter-dropdown', allMaterials);
 
             // 3. 下拉菜单显示/隐藏逻辑
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -402,10 +414,10 @@
 
                     // 同步更新手动筛选输入框的值（关键：保持状态一致）
                     if (column === 'model_filter') {
-                        params.set('product_model', value);
+                        params.set('model_filter', value);
                         document.querySelector('input[name="product_model"]').value = value;
                     } else if (column === 'material_filter') {
-                        params.set('material', value);
+                        params.set('material_filter', value);
                         document.querySelector('input[name="material"]').value = value;
                     }
 

@@ -2,6 +2,7 @@ import math
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 import sqlite3
 from datetime import datetime
+import json
 
 app = Flask(__name__)
 app.secret_key = "warehouse_2026"
@@ -150,14 +151,33 @@ def query_total():
     params.extend([per_page, (page - 1) * per_page])
     cursor.execute(query, params)
     stocks = cursor.fetchall()  # 实际项目中建议转换为字典列表
+    
+    # 全量唯一产品型号
+    all_models = conn.execute("SELECT DISTINCT product_model FROM total_inventory WHERE product_model != ''").fetchall()
+    all_models = [row['product_model'] for row in all_models]
+    # 全量唯一材质
+    all_materials = conn.execute("SELECT DISTINCT material FROM total_inventory WHERE material != ''").fetchall()
+    all_materials = [row['material'] for row in all_materials]
+
+    all_models = json.dumps(all_models, ensure_ascii=False)
+    all_materials = json.dumps(all_materials, ensure_ascii=False)
+
     conn.close()
+
+    print("===== 后端传递的数据 =====")
+    print(f"all_models类型：{type(all_models)}")  # 应该是<class 'list'>
+    print(f"all_models值：{all_models}")          # 应该是[]或["型号A","型号B"]
+    print(f"all_materials值：{all_materials}")
+
 
     # 传递数据到模板
     return render_template(
         'query.html',
         stocks=stocks,
         current_page=page,
-        total_pages=total_pages
+        total_pages=total_pages,
+        all_models=all_models,
+        all_materials=all_materials
     )
 
 # 入库（核心：全局异常捕获，确保数据库提交）
