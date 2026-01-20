@@ -414,10 +414,10 @@
 
                     // 同步更新手动筛选输入框的值（关键：保持状态一致）
                     if (column === 'model_filter') {
-                        params.set('model_filter', value);
+                        params.set('product_model', value);
                         document.querySelector('input[name="product_model"]').value = value;
                     } else if (column === 'material_filter') {
-                        params.set('material_filter', value);
+                        params.set('material', value);
                         document.querySelector('input[name="material"]').value = value;
                     }
 
