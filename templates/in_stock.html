@@ -158,11 +158,123 @@
         .type-manage-modal .modal-content.type-manage-content {
             position: relative !important; /* 确保z-index生效 */
             z-index: 1000 !important; /* 设为极低值，远低于提示弹窗的999999 */
+            min-width: 600px; /* 加宽产品类型管理弹窗 */
         }
         /* 同时降低外层type-manage-modal遮罩的层级（兜底） */
         .modal.type-manage-modal {
             position: fixed !important;
             z-index: 999 !important; /* 比提示弹窗低100倍 */
+        }
+
+        /* ========== 新增：产品类型管理弹窗的标签页样式（核心切换样式） ========== */
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+        .tab-item {
+            padding: 8px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-bottom: -1px;
+            border-radius: 5px 5px 0 0;
+            background: #f5f5f5;
+        }
+        .tab-item.active {
+            background: white;
+            border-color: #ccc;
+            font-weight: bold;
+            color: #4285F4;
+        }
+        .tab-content {
+            display: none; /* 默认隐藏所有标签内容 */
+        }
+        .tab-content.active {
+            display: block; /* 激活的标签内容显示 */
+        }
+
+        /* ========== 新增：产品类型管理弹窗的表单和按钮样式 ========== */
+        .manage-btn {
+            padding: 8px 12px;
+            margin-left: 10px;
+            background: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .crud-form {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .form-row {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        .form-row label {
+            width: 80px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        .form-row input {
+            flex: 1;
+            max-width: 300px;
+        }
+        .btn-group {
+            margin-left: 90px; /* 对齐标签宽度 */
+        }
+        .btn-primary {
+            padding: 6px 15px;
+            background: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-reset {
+            padding: 6px 15px;
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        .data-table th, .data-table td {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+        }
+        .data-table th {
+            background: #f5f5f5;
+        }
+        .oper-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 0 2px;
+        }
+        .edit-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        .delete-btn {
+            background: #f44336;
+            color: white;
         }
     </style>
     <!-- 路径保持你实际的目录结构 -->
@@ -264,7 +376,7 @@
                     <option value="型号D">型号D</option>
                 </select>
                 <!-- 新增：产品类型管理按钮 -->
-                <button class="manage-btn" onclick="openTypeManageModal()">管理产品类型</button>
+                <button type="button" class="manage-btn" onclick="openTypeManageModal()">管理产品类型</button>
             </div>
             <div class="form-item">
                 <label for="material">材质：</label>
@@ -305,6 +417,8 @@
 
             const timeInput = document.getElementById('in_time');
             const calendarIcon = document.getElementById('calendarIcon');
+
+            refreshSelectOptions(); // 页面加载时刷新下拉框选项
 
             if (!timeInput || !calendarIcon) {
                 alert('时间输入框元素未找到！');
@@ -566,7 +680,7 @@
                 .then(res => {
                     if (res.code === 200) {
                         {# showModal('success', res.msg); #}
-                        resetMaterialForm();
+                        resetModelForm();
                         loadMaterials();
                     } else {
                         showModal('error', res.msg);
