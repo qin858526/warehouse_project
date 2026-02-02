@@ -16,6 +16,41 @@ def get_db_connection():
 # 初始化数据库（确保表存在）
 def init_database():
     conn = get_db_connection()
+
+    # 产品型号表和材质表（独立管理）
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS product_models (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,   
+            model_name TEXT NOT NULL UNIQUE,
+            create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            update_time DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS material_types (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            material_name TEXT NOT NULL UNIQUE,
+            create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            update_time DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 初始化默认数据（如果表为空）
+    # 初始化型号
+    default_models = []
+    existing_models = [row['model_name'] for row in conn.execute('SELECT model_name FROM product_models').fetchall()]
+    for model in default_models:
+        if model not in existing_models:
+            conn.execute('INSERT INTO product_models (model_name) VALUES (?)', (model,))
+    # 初始化材质
+    default_materials = []
+    existing_materials = [row['material_name'] for row in conn.execute('SELECT material_name FROM material_types').fetchall()]
+    for material in default_materials:
+        if material not in existing_materials:
+            conn.execute('INSERT INTO material_types (material_name) VALUES (?)', (material,))
+
+
     # 入库表
     conn.execute('''
         CREATE TABLE IF NOT EXISTS warehouse_in (
@@ -61,6 +96,151 @@ def init_database():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+# ========== 新增：产品型号CRUD接口 ==========
+# 获取所有型号
+@app.route('/api/models', methods=['GET'])
+def get_models():
+    conn = get_db_connection()
+    models = conn.execute('SELECT id, model_name FROM product_models ORDER BY id DESC').fetchall()
+    conn.close()
+    # 转换为字典列表
+    model_list = [{'id': row['id'], 'name': row['model_name']} for row in models]
+    return jsonify({'code': 200, 'data': model_list})
+
+# 新增型号
+@app.route('/api/models/add', methods=['POST'])
+def add_model():
+    try:
+        model_name = request.json.get('name', '').strip()
+        if not model_name:
+            return jsonify({'code': 400, 'msg': '型号名称不能为空'})
+        conn = get_db_connection()
+        # 检查重复
+        exists = conn.execute('SELECT id FROM product_models WHERE model_name = ?', (model_name,)).fetchone()
+        if exists:
+            conn.close()
+            return jsonify({'code': 400, 'msg': '该型号已存在'})
+        conn.execute('INSERT INTO product_models (model_name) VALUES (?)', (model_name,))
+        conn.commit()
+        conn.close()
+        return jsonify({'code': 200, 'msg': '新增型号成功'})
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': f'新增失败：{str(e)}'})
+
+# 编辑型号
+@app.route('/api/models/edit', methods=['POST'])
+def edit_model():
+    try:
+        model_id = request.json.get('id')
+        model_name = request.json.get('name', '').strip()
+        if not model_id or not model_name:
+            return jsonify({'code': 400, 'msg': '参数不能为空'})
+        conn = get_db_connection()
+        # 检查重复（排除自身）
+        exists = conn.execute('SELECT id FROM product_models WHERE model_name = ? AND id != ?', (model_name, model_id)).fetchone()
+        if exists:
+            conn.close()
+            return jsonify({'code': 400, 'msg': '该型号已存在'})
+        conn.execute('UPDATE product_models SET model_name = ?, update_time = CURRENT_TIMESTAMP WHERE id = ?', (model_name, model_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'code': 200, 'msg': '编辑型号成功'})
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': f'编辑失败：{str(e)}'})
+
+# 删除型号（校验是否被使用）
+@app.route('/api/models/delete/<int:model_id>', methods=['POST'])
+def delete_model(model_id):
+    try:
+        conn = get_db_connection()
+        # # 检查是否被入库/出库/库存表使用
+        # used_in_in = conn.execute('SELECT id FROM warehouse_in WHERE product_model = (SELECT model_name FROM product_models WHERE id = ?)', (model_id,)).fetchone()
+        # used_in_out = conn.execute('SELECT id FROM warehouse_out WHERE product_model = (SELECT model_name FROM product_models WHERE id = ?)', (model_id,)).fetchone()
+        # used_in_stock = conn.execute('SELECT id FROM total_inventory WHERE product_model = (SELECT model_name FROM product_models WHERE id = ?)', (model_id,)).fetchone()
+        # if used_in_in or used_in_out or used_in_stock:
+        #     conn.close()
+        #     return jsonify({'code': 400, 'msg': '该型号已被使用，无法删除'})
+        # 执行删除
+        conn.execute('DELETE FROM product_models WHERE id = ?', (model_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'code': 200, 'msg': '删除型号成功'})
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': f'删除失败：{str(e)}'})
+
+# ========== 新增：材质CRUD接口 ==========
+# 获取所有材质
+@app.route('/api/materials', methods=['GET'])
+def get_materials():
+    conn = get_db_connection()
+    materials = conn.execute('SELECT id, material_name FROM material_types ORDER BY id DESC').fetchall()
+    conn.close()
+    # 转换为字典列表
+    material_list = [{'id': row['id'], 'name': row['material_name']} for row in materials]
+    return jsonify({'code': 200, 'data': material_list})
+
+# 新增材质
+@app.route('/api/materials/add', methods=['POST'])
+def add_material():
+    try:
+        material_name = request.json.get('name', '').strip()
+        if not material_name:
+            return jsonify({'code': 400, 'msg': '材质名称不能为空'})
+        conn = get_db_connection()
+        # 检查重复
+        exists = conn.execute('SELECT id FROM material_types WHERE material_name = ?', (material_name,)).fetchone()
+        if exists:
+            conn.close()
+            return jsonify({'code': 400, 'msg': '该材质已存在'})
+        conn.execute('INSERT INTO material_types (material_name) VALUES (?)', (material_name,))
+        conn.commit()
+        conn.close()
+        return jsonify({'code': 200, 'msg': '新增材质成功'})
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': f'新增失败：{str(e)}'})
+
+# 编辑材质
+@app.route('/api/materials/edit', methods=['POST'])
+def edit_material():
+    try:
+        material_id = request.json.get('id')
+        material_name = request.json.get('name', '').strip()
+        if not material_id or not material_name:
+            return jsonify({'code': 400, 'msg': '参数不能为空'})
+        conn = get_db_connection()
+        # 检查重复（排除自身）
+        exists = conn.execute('SELECT id FROM material_types WHERE material_name = ? AND id != ?', (material_name, material_id)).fetchone()
+        if exists:
+            conn.close()
+            return jsonify({'code': 400, 'msg': '该材质已存在'})
+        conn.execute('UPDATE material_types SET material_name = ?, update_time = CURRENT_TIMESTAMP WHERE id = ?', (material_name, material_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'code': 200, 'msg': '编辑材质成功'})
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': f'编辑失败：{str(e)}'})
+
+# 删除材质（校验是否被使用）
+@app.route('/api/materials/delete/<int:material_id>', methods=['POST'])
+def delete_material(material_id):
+    try:
+        conn = get_db_connection()
+        # # 检查是否被入库/出库/库存表使用
+        # used_in_in = conn.execute('SELECT id FROM warehouse_in WHERE material = (SELECT material_name FROM material_types WHERE id = ?)', (material_id,)).fetchone()
+        # used_in_out = conn.execute('SELECT id FROM warehouse_out WHERE material = (SELECT material_name FROM material_types WHERE id = ?)', (material_id,)).fetchone()
+        # used_in_stock = conn.execute('SELECT id FROM total_inventory WHERE material = (SELECT material_name FROM material_types WHERE id = ?)', (material_id,)).fetchone()
+        # if used_in_in or used_in_out or used_in_stock:
+        #     conn.close()
+        #     return jsonify({'code': 400, 'msg': '该材质已被使用，无法删除'})
+        # 执行删除
+        conn.execute('DELETE FROM material_types WHERE id = ?', (material_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'code': 200, 'msg': '删除材质成功'})
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': f'删除失败：{str(e)}'})
 
 # 库存查询
 @app.route('/query_total', methods=['GET'])
@@ -184,8 +364,17 @@ def query_total():
 # 入库（核心：全局异常捕获，确保数据库提交）
 @app.route('/in_stock', methods=['GET', 'POST'])
 def in_stock():
-    product_models = ["型号A", "型号B", "型号C", "型号D"]
-    materials = ["材质1", "材质2", "材质3", "材质4", "材质5"]
+    # product_models = ["型号A", "型号B", "型号C", "型号D"]
+    # materials = ["材质1", "材质2", "材质3", "材质4", "材质5"]
+
+    # 从产品型号表读取数据（替代硬编码）
+    conn = get_db_connection()
+    models = conn.execute('SELECT model_name FROM product_models ORDER BY id DESC').fetchall()
+    materials = conn.execute('SELECT material_name FROM material_types ORDER BY id DESC').fetchall()
+    conn.close()
+    # 转换为列表
+    product_models = [row['model_name'] for row in models]
+    materials = [row['material_name'] for row in materials]
     
     if request.method == 'POST':
         # 全局异常捕获：任何错误都能打印，且不中断流程

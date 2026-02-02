@@ -104,7 +104,7 @@
 
         /* ========== 仅新增：弹窗样式（不影响原有逻辑） ========== */
         .modal {
-            position: fixed;
+            position: fixed !important;
             top: 0;
             left: 0;
             width: 100%;
@@ -113,7 +113,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
+            z-index: 999999 !important;
+            /* 关键：脱离所有父级层级影响，确保层级最高 */
+            transform: translateZ(0) !important;
+            z-index: 999999 !important; /* 重复声明，防止被覆盖 */
             display: none;
         }
         .modal-content {
@@ -150,6 +153,17 @@
             border-radius: 4px;
             cursor: pointer;
         }
+
+        /* 降低type-manage-content弹窗的层级，让提示弹窗能覆盖它 */
+        .type-manage-modal .modal-content.type-manage-content {
+            position: relative !important; /* 确保z-index生效 */
+            z-index: 1000 !important; /* 设为极低值，远低于提示弹窗的999999 */
+        }
+        /* 同时降低外层type-manage-modal遮罩的层级（兜底） */
+        .modal.type-manage-modal {
+            position: fixed !important;
+            z-index: 999 !important; /* 比提示弹窗低100倍 */
+        }
     </style>
     <!-- 路径保持你实际的目录结构 -->
     <link rel="stylesheet" href="/static/laydate/theme/default/laydate.css">
@@ -167,6 +181,77 @@
         </div>
     </div>
 
+    <!-- 新增：产品类型管理弹窗 -->
+    <div class="modal type-manage-modal" id="typeManageModal">
+        <div class="modal-content type-manage-content">
+            <h3 style="text-align: center; margin-top: 0;">产品类型管理</h3>
+            <!-- 标签页头部 -->
+            <div class="tab-header">
+                <div class="tab-item active" data-tab="model">产品型号</div>
+                <div class="tab-item" data-tab="material">材质</div>
+            </div>
+            <!-- 产品型号标签内容 -->
+            <div class="tab-content active" id="modelTab">
+                <div class="crud-form">
+                    <div class="form-row">
+                        <label>型号名称：</label>
+                        <input type="text" id="modelNameInput" placeholder="请输入产品型号名称">
+                        <input type="hidden" id="modelIdInput"> <!-- 存储编辑的ID -->
+                    </div>
+                    <div class="form-row btn-group">
+                        <button class="btn-primary" onclick="submitModel()">新增</button>
+                        <button class="btn-reset" onclick="resetModelForm()">重置</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" id="modelTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>型号名称</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 动态渲染型号列表 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- 材质标签内容 -->
+            <div class="tab-content" id="materialTab">
+                <div class="crud-form">
+                    <div class="form-row">
+                        <label>材质名称：</label>
+                        <input type="text" id="materialNameInput" placeholder="请输入材质名称">
+                        <input type="hidden" id="materialIdInput"> <!-- 存储编辑的ID -->
+                    </div>
+                    <div class="form-row btn-group">
+                        <button class="btn-primary" onclick="submitMaterial()">新增</button>
+                        <button class="btn-reset" onclick="resetMaterialForm()">重置</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" id="materialTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>材质名称</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 动态渲染材质列表 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="modal-close" onclick="closeTypeManageModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <div class="form-container">
         <form method="POST">
             <div class="form-item">
@@ -178,8 +263,8 @@
                     <option value="型号C">型号C</option>
                     <option value="型号D">型号D</option>
                 </select>
-                <button type="button" onclick="document.getElementById('product_model').focus();"
-                        style="margin-right: 10px; padding: 5px 10px; cursor: pointer;">新增产品型号</button>
+                <!-- 新增：产品类型管理按钮 -->
+                <button class="manage-btn" onclick="openTypeManageModal()">管理产品类型</button>
             </div>
             <div class="form-item">
                 <label for="material">材质：</label>
@@ -285,6 +370,271 @@
         function closeModal() {
             document.getElementById('tipModal').style.display = 'none';
         }
+
+        // ========== 新增：产品类型管理相关函数 ==========
+        // 打开管理弹窗
+        function openTypeManageModal() {
+            document.getElementById('typeManageModal').style.display = 'flex';
+            // 加载型号和材质数据
+            loadModels();
+            loadMaterials();
+        }
+        // 关闭管理弹窗
+        function closeTypeManageModal() {
+            document.getElementById('typeManageModal').style.display = 'none';
+            // 重置表单
+            resetModelForm();
+            resetMaterialForm();
+            // 刷新入库页面的下拉框
+            refreshSelectOptions();
+        }
+        // 切换标签页
+        document.querySelectorAll('.tab-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // 移除所有active
+                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                // 激活当前标签
+                this.classList.add('active');
+                const tabId = this.dataset.tab + 'Tab';
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // ========== 产品型号CRUD ==========
+        // 加载型号列表
+        function loadModels() {
+            fetch('/api/models')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const tableBody = document.querySelector('#modelTable tbody');
+                        tableBody.innerHTML = '';
+                        data.data.forEach(model => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>${model.id}</td>
+                                <td>${model.name}</td>
+                                <td>
+                                    <button class="oper-btn edit-btn" onclick="editModel(${model.id}, '${model.name}')">编辑</button>
+                                    <button class="oper-btn delete-btn" onclick="deleteModel(${model.id})">删除</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(tr);
+                        });
+                    } else {
+                        showModal('error', '加载型号列表失败：' + data.msg);
+                    }
+                })
+                .catch(error => {
+                    showModal('error', '加载型号列表失败：' + error.message);
+                });
+        }
+        // 重置型号表单
+        function resetModelForm() {
+            document.getElementById('modelIdInput').value = '';
+            document.getElementById('modelNameInput').value = '';
+            // 重置按钮文字为新增
+            document.querySelector('#modelTab .btn-primary').textContent = '新增';
+        }
+        // 编辑型号（回显）
+        function editModel(id, name) {
+            document.getElementById('modelIdInput').value = id;
+            document.getElementById('modelNameInput').value = name;
+            // 修改按钮文字为编辑
+            document.querySelector('#modelTab .btn-primary').textContent = '编辑';
+        }
+        // 提交型号（新增/编辑）
+        function submitModel() {
+            const id = document.getElementById('modelIdInput').value;
+            const name = document.getElementById('modelNameInput').value.trim();
+            if (!name) {
+                showModal('error', '型号名称不能为空');
+                return;
+            }
+            // 构建请求参数
+            const url = id ? '/api/models/edit' : '/api/models/add';
+            const data = id ? { id: id, name: name } : { name: name };
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(res => {
+                    if (res.code === 200) {
+                        {# showModal('success', res.msg); #}
+                        resetModelForm();
+                        loadModels();
+                    } else {
+                        showModal('error', res.msg);
+                    }
+                })
+                .catch(error => {
+                    showModal('error', '操作失败：' + error.message);
+                });
+        }
+        // 删除型号
+        function deleteModel(id) {
+            if (!confirm('确定删除该型号吗？删除后不可恢复！')) {
+                return;
+            }
+            fetch(`/api/models/delete/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(res => {
+                    if (res.code === 200) {
+                        showModal('success', res.msg);
+                        loadModels();
+                    } else {
+                        showModal('error', res.msg);
+                    }
+                })
+                .catch(error => {
+                    showModal('error', '删除失败：' + error.message);
+                });
+        }
+
+        // ========== 材质CRUD ==========
+        // 加载材质列表
+        function loadMaterials() {
+            fetch('/api/materials')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const tableBody = document.querySelector('#materialTable tbody');
+                        tableBody.innerHTML = '';
+                        data.data.forEach(material => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>${material.id}</td>
+                                <td>${material.name}</td>
+                                <td>
+                                    <button class="oper-btn edit-btn" onclick="editMaterial(${material.id}, '${material.name}')">编辑</button>
+                                    <button class="oper-btn delete-btn" onclick="deleteMaterial(${material.id})">删除</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(tr);
+                        });
+                    } else {
+                        showModal('error', '加载材质列表失败：' + data.msg);
+                    }
+                })
+                .catch(error => {
+                    showModal('error', '加载材质列表失败：' + error.message);
+                });
+        }
+        // 重置材质表单
+        function resetMaterialForm() {
+            document.getElementById('materialIdInput').value = '';
+            document.getElementById('materialNameInput').value = '';
+            document.querySelector('#materialTab .btn-primary').textContent = '新增';
+        }
+        // 编辑材质（回显）
+        function editMaterial(id, name) {
+            document.getElementById('materialIdInput').value = id;
+            document.getElementById('materialNameInput').value = name;
+            document.querySelector('#materialTab .btn-primary').textContent = '编辑';
+        }
+        // 提交材质（新增/编辑）
+        function submitMaterial() {
+            const id = document.getElementById('materialIdInput').value;
+            const name = document.getElementById('materialNameInput').value.trim();
+            if (!name) {
+                showModal('error', '材质名称不能为空');
+                return;
+            }
+            // 构建请求参数
+            const url = id ? '/api/materials/edit' : '/api/materials/add';
+            const data = id ? { id: id, name: name } : { name: name };
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(res => {
+                    if (res.code === 200) {
+                        {# showModal('success', res.msg); #}
+                        resetMaterialForm();
+                        loadMaterials();
+                    } else {
+                        showModal('error', res.msg);
+                    }
+                })
+                .catch(error => {
+                    showModal('error', '操作失败：' + error.message);
+                });
+        }
+        // 删除材质
+        function deleteMaterial(id) {
+            if (!confirm('确定删除该材质吗？删除后不可恢复！')) {
+                return;
+            }
+            fetch(`/api/materials/delete/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(res => {
+                    if (res.code === 200) {
+                        showModal('success', res.msg);
+                        loadMaterials();
+                    } else {
+                        showModal('error', res.msg);
+                    }
+                })
+                .catch(error => {
+                    showModal('error', '删除失败：' + error.message);
+                });
+        }
+
+        // ========== 刷新入库页面的下拉框选项 ==========
+        function refreshSelectOptions() {
+            // 刷新型号下拉框
+            fetch('/api/models')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const modelSelect = document.getElementById('product_model');
+                        modelSelect.innerHTML = '<option value="">请选择型号</option>';
+                        data.data.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model.name;
+                            option.textContent = model.name;
+                            modelSelect.appendChild(option);
+                        });
+                    }
+                });
+            // 刷新材质下拉框
+            fetch('/api/materials')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const materialSelect = document.getElementById('material');
+                        materialSelect.innerHTML = '<option value="">请选择材质</option>';
+                        data.data.forEach(material => {
+                            const option = document.createElement('option');
+                            option.value = material.name;
+                            option.textContent = material.name;
+                            materialSelect.appendChild(option);
+                        });
+                    }
+                });
+        }
+
     </script>
 </body>
 </html>
