@@ -22,6 +22,92 @@
             .btn-wrapper {
                 gap: 30px;
             }
+            /* ========== 产品管理弹窗整体适配 ========== */
+            /* 弹窗容器：宽度自适应手机屏幕，取消最小宽度限制 */
+            .modal.type-manage-modal .modal-content.type-manage-content {
+                min-width: unset !important; /* 取消600px最小宽度 */
+                max-width: 90% !important;   /* 最多占屏幕90%宽度 */
+                width: 100% !important;
+                padding: 15px !important;    /* 减小内边距，节省空间 */
+            }
+
+            /* 标签页适配：减小按钮padding，适配手机 */
+            .tab-header {
+                flex-wrap: wrap; /* 标签过多时自动换行 */
+                gap: 5px;        /* 减小标签间距 */
+            }
+            .tab-item {
+                padding: 6px 12px !important; /* 减小标签内边距 */
+                font-size: 14px !important;
+            }
+
+            /* 表单行适配：手机端改为块级布局，避免横向挤压 */
+            .crud-form .form-row {
+                display: block !important; /* 取消flex，改为块级 */
+                margin: 15px 0 !important;
+            }
+            .crud-form .form-row label {
+                width: 100% !important;    /* 标签占满宽度 */
+                text-align: left !important;/* 左对齐，节省空间 */
+                margin-right: 0 !important;
+                margin-bottom: 5px !important;
+            }
+            .crud-form .form-row input {
+                width: 100% !important;    /* 输入框占满宽度 */
+                max-width: unset !important;/* 取消300px最大宽度限制 */
+                box-sizing: border-box !important;
+            }
+
+            /* 表单按钮组：取消左对齐，适配块级布局 */
+            .crud-form .btn-group {
+                margin-left: 0 !important;  /* 取消90px左间距 */
+                margin-top: 10px !important;
+            }
+            .btn-primary, .btn-reset {
+                padding: 5px 10px !important; /* 减小按钮大小 */
+                font-size: 14px !important;
+            }
+
+            /* 表格容器：强化横向滚动，适配手机 */
+            .table-container {
+                margin-top: 10px !important;
+                max-width: 100% !important;
+                overflow-x: auto !important; /* 强制横向滚动 */
+            }
+            .data-table {
+                font-size: 13px !important; /* 减小表格字体 */
+            }
+            .data-table th, .data-table td {
+                padding: 6px 8px !important; /* 减小表格单元格内边距 */
+            }
+            .oper-btn {
+                padding: 2px 5px !important; /* 减小操作按钮大小 */
+                font-size: 12px !important;
+            }
+
+            /* ========== 入库表单的下拉框+管理按钮适配 ========== */
+            /* 手机端管理按钮换行显示，避免和下拉框重叠 */
+            .form-item {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+            .form-item select {
+                width: 100% !important; /* 下拉框占满宽度 */
+                margin-bottom: 10px !important; /* 和按钮隔开 */
+            }
+            .manage-btn {
+                margin-left: 0 !important; /* 取消左间距 */
+                padding: 6px 10px !important; /* 减小按钮大小 */
+                font-size: 14px !important;
+            }
+
+            /* 弹窗关闭按钮：适配手机点击 */
+            .modal.type-manage-modal .modal-close {
+                padding: 8px 15px !important;
+                font-size: 14px !important;
+                width: 80% !important; /* 按钮占80%宽度，方便点击 */
+            }
         }
         body {
             font-family: Arial, sans-serif;
