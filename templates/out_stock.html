@@ -202,8 +202,69 @@
 
     <script>
         window.addEventListener('DOMContentLoaded', function() {
+            refreshSelectOptions();
             const timeInput = document.getElementById('out_time');
             const calendarIcon = document.getElementById('calendarIcon');
+
+            // ========== 产品型号CRUD ==========
+            // 加载型号列表
+            function loadModels() {
+                fetch('/api/models')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200) {
+                            const tableBody = document.querySelector('#modelTable tbody');
+                            tableBody.innerHTML = '';
+                            data.data.forEach(model => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td>${model.id}</td>
+                                    <td>${model.name}</td>
+                                    <td>
+                                        <button class="oper-btn edit-btn" onclick="editModel(${model.id}, '${model.name}')">编辑</button>
+                                        <button class="oper-btn delete-btn" onclick="deleteModel(${model.id})">删除</button>
+                                    </td>
+                                `;
+                                tableBody.appendChild(tr);
+                            });
+                        } else {
+                            showModal('error', '加载型号列表失败：' + data.msg);
+                        }
+                    })
+                    .catch(error => {
+                        showModal('error', '加载型号列表失败：' + error.message);
+                    });
+            }
+
+            // ========== 材质CRUD ==========
+            // 加载材质列表
+            function loadMaterials() {
+                fetch('/api/materials')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200) {
+                            const tableBody = document.querySelector('#materialTable tbody');
+                            tableBody.innerHTML = '';
+                            data.data.forEach(material => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td>${material.id}</td>
+                                    <td>${material.name}</td>
+                                    <td>
+                                        <button class="oper-btn edit-btn" onclick="editMaterial(${material.id}, '${material.name}')">编辑</button>
+                                        <button class="oper-btn delete-btn" onclick="deleteMaterial(${material.id})">删除</button>
+                                    </td>
+                                `;
+                                tableBody.appendChild(tr);
+                            });
+                        } else {
+                            showModal('error', '加载材质列表失败：' + data.msg);
+                        }
+                    })
+                    .catch(error => {
+                        showModal('error', '加载材质列表失败：' + error.message);
+                    });
+            }
 
             // 容错校验
             if (!timeInput || !calendarIcon) {
@@ -271,6 +332,41 @@
         function closeModal() {
             document.getElementById('tipModal').style.display = 'none';
         }
+
+        // ========== 刷新入库页面的下拉框选项 ==========
+        function refreshSelectOptions() {
+            // 刷新型号下拉框
+            fetch('/api/models')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const modelSelect = document.getElementById('product_model');
+                        modelSelect.innerHTML = '<option value="">请选择型号</option>';
+                        data.data.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model.name;
+                            option.textContent = model.name;
+                            modelSelect.appendChild(option);
+                        });
+                    }
+                });
+            // 刷新材质下拉框
+            fetch('/api/materials')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const materialSelect = document.getElementById('material');
+                        materialSelect.innerHTML = '<option value="">请选择材质</option>';
+                        data.data.forEach(material => {
+                            const option = document.createElement('option');
+                            option.value = material.name;
+                            option.textContent = material.name;
+                            materialSelect.appendChild(option);
+                        });
+                    }
+                });
+        }
+
     </script>
 </body>
 </html>
