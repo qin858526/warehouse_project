@@ -17,7 +17,16 @@ def get_db_connection():
 def init_database():
     conn = get_db_connection()
 
-    # 产品型号表和材质表（独立管理）
+    # 产品型号表和材质表和客户表（独立管理）
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS customer_type (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,   
+            customer_name TEXT NOT NULL UNIQUE,
+            create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            update_time DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     conn.execute('''
         CREATE TABLE IF NOT EXISTS product_models (
             id INTEGER PRIMARY KEY AUTOINCREMENT,   
@@ -97,6 +106,78 @@ def init_database():
 def index():
     return render_template('index.html')
 
+
+# ========== 新增：客户单位CRUD接口 ==========
+# 获取所有客户单位
+@app.route('/api/customers', methods=['GET'])
+def get_customers():
+    conn = get_db_connection()
+    models = conn.execute('SELECT id, customer_name FROM customer_type ORDER BY id DESC').fetchall()
+    conn.close()
+    # 转换为字典列表
+    model_list = [{'id': row['id'], 'name': row['customer_name']} for row in models]
+    return jsonify({'code': 200, 'data': model_list})
+
+# 新增客户单位
+@app.route('/api/customers/add', methods=['POST'])
+def add_customer():
+    try:
+        customer_name = request.json.get('name', '').strip()
+        if not customer_name:
+            return jsonify({'code': 400, 'msg': '客户单位名称不能为空'})
+        conn = get_db_connection()
+        # 检查重复
+        exists = conn.execute('SELECT id FROM customer_type WHERE customer_name = ?', (customer_name,)).fetchone()
+        if exists:
+            conn.close()
+            return jsonify({'code': 400, 'msg': '该客户单位已存在'})
+        conn.execute('INSERT INTO customer_type (customer_name) VALUES (?)', (customer_name,))
+        conn.commit()
+        conn.close()
+        return jsonify({'code': 200, 'msg': '新增客户单位成功'})
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': f'新增失败：{str(e)}'})
+
+# 编辑客户单位
+@app.route('/api/customers/edit', methods=['POST'])
+def edit_customer():
+    try:
+        customer_id = request.json.get('id')
+        customer_name = request.json.get('name', '').strip()
+        if not customer_id or not customer_name:
+            return jsonify({'code': 400, 'msg': '参数不能为空'})
+        conn = get_db_connection()
+        # 检查重复（排除自身）
+        exists = conn.execute('SELECT id FROM customer_type WHERE customer_name = ? AND id != ?', (customer_name, customer_id)).fetchone()
+        if exists:
+            conn.close()
+            return jsonify({'code': 400, 'msg': '该客户单位已存在'})
+        conn.execute('UPDATE customer_type SET customer_name = ?, update_time = CURRENT_TIMESTAMP WHERE id = ?', (customer_name, customer_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'code': 200, 'msg': '编辑客户单位成功'})
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': f'编辑失败：{str(e)}'})
+
+# 删除客户单位（校验是否被使用）
+@app.route('/api/customers/delete/<int:customer_id>', methods=['POST'])
+def delete_customer(customer_id):
+    try:
+        conn = get_db_connection()
+        # # 检查是否被入库/出库/库存表使用
+        # used_in_in = conn.execute('SELECT id FROM warehouse_in WHERE product_model = (SELECT model_name FROM product_models WHERE id = ?)', (model_id,)).fetchone()
+        # used_in_out = conn.execute('SELECT id FROM warehouse_out WHERE product_model = (SELECT model_name FROM product_models WHERE id = ?)', (model_id,)).fetchone()
+        # used_in_stock = conn.execute('SELECT id FROM total_inventory WHERE product_model = (SELECT model_name FROM product_models WHERE id = ?)', (model_id,)).fetchone()
+        # if used_in_in or used_in_out or used_in_stock:
+        #     conn.close()
+        #     return jsonify({'code': 400, 'msg': '该客户单位已被使用，无法删除'})
+        # 执行删除
+        conn.execute('DELETE FROM customer_type WHERE id = ?', (customer_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'code': 200, 'msg': '删除客户单位成功'})
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': f'删除失败：{str(e)}'})
 
 # ========== 新增：产品型号CRUD接口 ==========
 # 获取所有型号

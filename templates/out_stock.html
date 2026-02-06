@@ -22,6 +22,92 @@
             .btn-wrapper {
                 gap: 30px;
             }
+            /* ========== 客户管理弹窗整体适配 ========== */
+            /* 弹窗容器：宽度自适应手机屏幕，取消最小宽度限制 */
+            .modal.type-manage-customer .modal-content.type-manage-content {
+                min-width: unset !important; /* 取消600px最小宽度 */
+                max-width: 90% !important;   /* 最多占屏幕90%宽度 */
+                width: 100% !important;
+                padding: 15px !important;    /* 减小内边距，节省空间 */
+            }
+
+            /* 标签页适配：减小按钮padding，适配手机 */
+            .tab-header {
+                flex-wrap: wrap; /* 标签过多时自动换行 */
+                gap: 5px;        /* 减小标签间距 */
+            }
+            .tab-item {
+                padding: 6px 12px !important; /* 减小标签内边距 */
+                font-size: 14px !important;
+            }
+
+            /* 表单行适配：手机端改为块级布局，避免横向挤压 */
+            .crud-form .form-row {
+                display: block !important; /* 取消flex，改为块级 */
+                margin: 15px 0 !important;
+            }
+            .crud-form .form-row label {
+                width: 100% !important;    /* 标签占满宽度 */
+                text-align: left !important;/* 左对齐，节省空间 */
+                margin-right: 0 !important;
+                margin-bottom: 5px !important;
+            }
+            .crud-form .form-row input {
+                width: 100% !important;    /* 输入框占满宽度 */
+                max-width: unset !important;/* 取消300px最大宽度限制 */
+                box-sizing: border-box !important;
+            }
+
+            /* 表单按钮组：取消左对齐，适配块级布局 */
+            .crud-form .btn-group {
+                margin-left: 0 !important;  /* 取消90px左间距 */
+                margin-top: 10px !important;
+            }
+            .btn-primary, .btn-reset {
+                padding: 5px 10px !important; /* 减小按钮大小 */
+                font-size: 14px !important;
+            }
+
+            /* 表格容器：强化横向滚动，适配手机 */
+            .table-container {
+                margin-top: 10px !important;
+                max-width: 100% !important;
+                overflow-x: auto !important; /* 强制横向滚动 */
+            }
+            .data-table {
+                font-size: 13px !important; /* 减小表格字体 */
+            }
+            .data-table th, .data-table td {
+                padding: 6px 8px !important; /* 减小表格单元格内边距 */
+            }
+            .oper-btn {
+                padding: 2px 5px !important; /* 减小操作按钮大小 */
+                font-size: 12px !important;
+            }
+
+            /* ========== 入库表单的下拉框+管理按钮适配 ========== */
+            /* 手机端管理按钮换行显示，避免和下拉框重叠 */
+            .form-item {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+            .form-item select {
+                width: 100% !important; /* 下拉框占满宽度 */
+                margin-bottom: 10px !important; /* 和按钮隔开 */
+            }
+            .manage-btn {
+                margin-left: 0 !important; /* 取消左间距 */
+                padding: 6px 10px !important; /* 减小按钮大小 */
+                font-size: 14px !important;
+            }
+
+            /* 弹窗关闭按钮：适配手机点击 */
+            .modal.type-manage-customer .modal-close {
+                padding: 8px 15px !important;
+                font-size: 14px !important;
+                width: 80% !important; /* 按钮占80%宽度，方便点击 */
+            }
         }
         /* 基础样式（仅保留核心，无laydate自定义） */
         body {
@@ -152,6 +238,130 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        /* 降低type-manage-content弹窗的层级，让提示弹窗能覆盖它 */
+        .type-manage-customer .modal-content.type-manage-content {
+            position: relative !important; /* 确保z-index生效 */
+            z-index: 1000 !important; /* 设为极低值，远低于提示弹窗的999999 */
+            min-width: 600px; /* 加宽客户类型管理弹窗 */
+        }
+        /* 同时降低外层type-manage-customer遮罩的层级（兜底） */
+        .modal.type-manage-customer {
+            position: fixed !important;
+            z-index: 999 !important; /* 比提示弹窗低100倍 */
+        }
+
+        /* ========== 新增：客户单位管理弹窗的标签页样式（核心切换样式） ========== */
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+        .tab-item {
+            padding: 8px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-bottom: -1px;
+            border-radius: 5px 5px 0 0;
+            background: #f5f5f5;
+        }
+        .tab-item.active {
+            background: white;
+            border-color: #ccc;
+            font-weight: bold;
+            color: #4285F4;
+        }
+        .tab-content {
+            display: none; /* 默认隐藏所有标签内容 */
+        }
+        .tab-content.active {
+            display: block; /* 激活的标签内容显示 */
+        }
+
+        /* ========== 新增：客户单位管理弹窗的表单和按钮样式 ========== */
+        .manage-btn {
+            padding: 8px 12px;
+            margin-left: 10px;
+            background: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .crud-form {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .form-row {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        .form-row label {
+            width: 80px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        .form-row input {
+            flex: 1;
+            max-width: 300px;
+        }
+        .btn-group {
+            margin-left: 90px; /* 对齐标签宽度 */
+        }
+        .btn-primary {
+            padding: 6px 15px;
+            background: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-reset {
+            padding: 6px 15px;
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .table-container {
+            max-height: 300px;
+            overflow-y: auto;
+            width: 100%;
+            overflow-x: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        .data-table th, .data-table td {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+        }
+        .data-table th {
+            background: #f5f5f5;
+        }
+        .oper-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 0 2px;
+        }
+        .edit-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        .delete-btn {
+            background: #f44336;
+            color: white;
+        }
     </style>
     <!-- 路径保持和你实际一致 -->
     <link rel="stylesheet" href="/static/laydate/theme/default/laydate.css">
@@ -159,7 +369,6 @@
 </head>
 <body>
     <h1>货物出库</h1>
-
     <!-- ========== 新增：弹窗容器 ========== -->
     <div class="modal" id="tipModal">
         <div class="modal-content" id="modalContent">
@@ -168,7 +377,44 @@
             <button class="modal-close" onclick="closeModal()">确定</button>
         </div>
     </div>
-
+    <!-- 新增：客户管理弹窗 -->
+    <div class="modal type-manage-customer" id="typeManageCustomer">
+        <div class="modal-content type-manage-content">
+            <h3 style="text-align: center; margin-top: 0;">客户管理</h3>
+            <!-- 标签页头部 -->
+            <div class="tab-header">
+                <div class="tab-item active" data-tab="customer">客户单位</div>
+            </div>
+            <!-- 客户标签内容 -->
+            <div class="tab-content active" id="customerTab">
+                <div class="crud-form">
+                    <div class="form-row">
+                        <label>客户单位：</label>
+                        <input type="text" id="customerNameInput" placeholder="请输入客户单位名称">
+                        <input type="hidden" id="customerIdInput"> <!-- 存储编辑的ID -->
+                    </div>
+                    <div class="form-row btn-group">
+                        <button class="btn-primary" onclick="submitCustomer()">新增</button>
+                        <button class="btn-reset" onclick="resetCustomerForm()">重置</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" id="customerTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>客户单位</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 动态渲染客户列表 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="form-container">
         <form method="POST">
             <div class="form-item">
@@ -199,6 +445,8 @@
             <div class="form-item">
                 <label for="customer_unit">客户单位：</label>
                 <input type="text" name="customer_unit" id="customer_unit" required placeholder="请输入客户单位">
+                <!-- 新增：客户单位管理按钮 -->
+                <button type="button" class="manage-btn" onclick="openTypeManageCustomer()">管理客户单位</button>
             </div>
             <div class="form-item">
                 <label for="out_time">出库时间：</label>
@@ -224,6 +472,136 @@
             refreshSelectOptions();
             const timeInput = document.getElementById('out_time');
             const calendarIcon = document.getElementById('calendarIcon');
+            refreshSelectOptions();
+
+            // ========== 新增：客户单位管理相关函数 ==========
+            // 打开管理弹窗
+            function openTypeManageCustomer() {
+                document.getElementById('typeManageCustomer').style.display = 'flex';
+                // 加载型号和材质数据
+                loadCustomer();
+            }
+            // 关闭管理弹窗
+            function closeTypeManageCustomer() {
+                document.getElementById('typeManageCustomer').style.display = 'none';
+                // 重置表单
+                resetCustomerForm();
+                // 刷新入库页面的下拉框
+                refreshSelectOptions();
+            }
+            // 切换标签页
+            document.querySelectorAll('.tab-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有active
+                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    // 激活当前标签
+                    this.classList.add('active');
+                    const tabId = this.dataset.tab + 'Tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // ========== 客户单位CRUD ==========
+            // 加载客户单位列表
+            function loadCustomer() {
+                fetch('/api/customers')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200) {
+                            const tableBody = document.querySelector('#modelTable tbody');
+                            tableBody.innerHTML = '';
+                            data.data.forEach(model => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td>${customer.id}</td>
+                                    <td>${customer.name}</td>
+                                    <td>
+                                        <button class="oper-btn edit-btn" onclick="editCustomer(${customer.id}, '${customer.name}')">编辑</button>
+                                        <button class="oper-btn delete-btn" onclick="deleteCustomer(${customer.id})">删除</button>
+                                    </td>
+                                `;
+                                tableBody.appendChild(tr);
+                            });
+                        } else {
+                            showModal('error', '加载客户单位列表失败：' + data.msg);
+                        }
+                    })
+                    .catch(error => {
+                        showModal('error', '加载客户单位列表失败：' + error.message);
+                    });
+            }
+            // 重置客户单位表单
+            function resetCustomerForm() {
+                document.getElementById('customerIdInput').value = '';
+                document.getElementById('customerNameInput').value = '';
+                // 重置按钮文字为新增
+                document.querySelector('#customerTab .btn-primary').textContent = '新增';
+            }
+            // 编辑客户单位（回显）
+            function editCustomer(id, name) {
+                document.getElementById('customerIdInput').value = id;
+                document.getElementById('customerNameInput').value = name;
+                // 修改按钮文字为编辑
+                document.querySelector('#customerTab .btn-primary').textContent = '编辑';
+            }
+            // 提交客户单位（新增/编辑）
+            function submitCustomer() {
+                const id = document.getElementById('customerIdInput').value;
+                const name = document.getElementById('customerNameInput').value.trim();
+                if (!name) {
+                    showModal('error', '客户单位名称不能为空');
+                    return;
+                }
+                // 构建请求参数
+                const url = id ? '/api/customers/edit' : '/api/customers/add';
+                const data = id ? { id: id, name: name } : { name: name };
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(response => response.json())
+                    .then(res => {
+                        if (res.code === 200) {
+                            {# showModal('success', res.msg); #}
+                            resetModelForm();
+                            loadModels();
+                        } else {
+                            showModal('error', res.msg);
+                        }
+                    })
+                    .catch(error => {
+                        showModal('error', '操作失败：' + error.message);
+                    });
+            }
+            // 删除客户单位
+            function deleteCustomer(id) {
+                if (!confirm('确定删除该客户单位吗？删除后不可恢复！')) {
+                    return;
+                }
+                fetch(`/api/customers/delete/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                    .then(response => response.json())
+                    .then(res => {
+                        if (res.code === 200) {
+                            showModal('success', res.msg);
+                            loadCustomers();
+                        } else {
+                            showModal('error', res.msg);
+                        }
+                    })
+                    .catch(error => {
+                        showModal('error', '删除失败：' + error.message);
+                    });
+            }
 
             // ========== 产品型号CRUD ==========
             // 加载型号列表

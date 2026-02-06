@@ -31,7 +31,7 @@
             text-align: center;
             color: #333;
         }
-        /* 新增：筛选表单样式（匹配原有风格） */
+        /* 筛选表单样式*/
         .filter-panel {
             margin: 10px auto 20px;
             padding: 15px;
@@ -233,7 +233,7 @@
     <input type="hidden" id="all-models" value='{{ all_models|safe }}'>
     <input type="hidden" id="all-materials" value='{{ all_materials|safe }}'>
 
-    <!-- 新增：筛选表单 -->
+    <!-- 筛选表单 -->
     <div class="filter-panel">
         <form method="GET" action="/query_total">
             <div class="form-item">
@@ -275,7 +275,7 @@
                     <div class="filter-dropdown" id="model_filter-dropdown">
                         <div class="filter-option" data-value="">全部</div>
                         <div class="filter-divider"></div>
-                        <!-- 选项将通过JS动态生成 -->
+                        <!-- 选项通过JS动态生成 -->
                     </div>
                 </th>
                 <th class="table-header">
@@ -289,7 +289,7 @@
                     </div>
                 </th>
                 <th>库存数量</th>
-                <th>出入库记录（仅显示最新10条记录）</th>
+                <th>操作</th>
                 <th>备注</th>
             </tr>
         </thead>
