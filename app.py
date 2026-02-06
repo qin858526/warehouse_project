@@ -16,6 +16,7 @@ def get_db_connection():
 # 初始化数据库（确保表存在）
 def init_database():
     conn = get_db_connection()
+    cursor = conn.cursor()
 
     # 产品型号表和材质表和客户表（独立管理）
     conn.execute('''
@@ -98,6 +99,24 @@ def init_database():
             UNIQUE(product_model, material)
         )
     ''')
+    # 定义需要新增的字段：表名 -> [(字段名, 字段类型), ...]
+    add_columns = {
+        'warehouse_in': [('box_num', 'INTEGER'), ('per_box_num', 'INTEGER')],
+        'warehouse_out': [('box_num', 'INTEGER'), ('per_box_num', 'INTEGER')],
+        'total_inventory': [('box_num', 'INTEGER'), ('per_box_num', 'INTEGER')]
+    }
+
+    for table_name, columns in add_columns.items():
+        # 查询当前表的所有字段名
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        existing_columns = [col[1] for col in cursor.fetchall()]
+        
+        # 遍历需要新增的字段，不存在才执行ALTER
+        for col_name, col_type in columns:
+            if col_name not in existing_columns:
+                cursor.execute(f'''ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}''')
+                print(f"成功为 {table_name} 新增字段 {col_name}")
+
     conn.commit()
     conn.close()
 
@@ -442,7 +461,6 @@ def query_total():
     )
 
 # 入库（核心：全局异常捕获，确保数据库提交）
-# 入库（核心：全局异常捕获，确保数据库提交）
 @app.route('/in_stock', methods=['GET', 'POST'])
 def in_stock():
     # product_models = ["型号A", "型号B", "型号C", "型号D"]
@@ -466,9 +484,14 @@ def in_stock():
             # 1. 获取表单数据
             product_model = request.form['product_model']
             material = request.form['material']
+            per_box_num = request.form.get('per_box_num', '').strip()
+            box_num = request.form.get('box_num', '').strip()
             in_quantity = int(request.form['in_quantity'])
             user_input_time = request.form.get('in_time', '')
             remarks = request.form.get('remarks', '')
+            #   处理空值
+            per_box_num = int(per_box_num) if per_box_num else None
+            box_num = int(box_num) if box_num else None
 
             # 2. 简化时间处理：兼容任意格式，失败则用当前时间
             if not user_input_time:
@@ -487,11 +510,11 @@ def in_stock():
             # 入库接口的数据库操作部分（修改后）
             conn = get_db_connection()
             # 调试日志1：打印要插入的数据
-            print(f"准备插入入库数据：{product_model}, {material}, {in_quantity}, {in_time}")
+            print(f"准备插入入库数据：{product_model}, {material}, {per_box_num}, {box_num}, {in_quantity}, {in_time}")
             # 插入入库记录
             conn.execute(
-                'INSERT INTO warehouse_in (product_model, material, in_quantity, in_time, remarks) VALUES (?, ?, ?, ?, ?)',
-                (product_model, material, in_quantity, in_time, remarks)
+                'INSERT INTO warehouse_in (product_model, material, per_box_num, box_num, in_quantity, in_time, remarks) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (product_model, material, per_box_num, box_num, in_quantity, in_time, remarks)
             )
             # 调试日志2：打印插入后的行数（确认插入成功）
             cursor = conn.execute('SELECT COUNT(*) FROM warehouse_in')
@@ -511,8 +534,8 @@ def in_stock():
                 )
             else:
                 conn.execute(
-                    'INSERT INTO total_inventory (product_model, material, stock_quantity, remarks) VALUES (?, ?, ?, ?)',
-                    (product_model, material, in_quantity, remarks)
+                    'INSERT INTO total_inventory (product_model, material, per_box_num, box_num, stock_quantity, remarks) VALUES (?, ?, ?, ?, ?, ?)',
+                    (product_model, material, per_box_num, box_num, in_quantity, remarks)
                 )
             # 调试日志3：打印库存表行数
             cursor2 = conn.execute('SELECT COUNT(*) FROM total_inventory')
@@ -544,10 +567,16 @@ def out_stock():
         try:
             product_model = request.form['product_model']
             material = request.form['material']
+            per_box_num = request.form.get('per_box_num', '').strip()
+            box_num = request.form.get('box_num', '').strip()
             out_quantity = int(request.form['out_quantity'])
             customer_unit = request.form['customer_unit']
             user_input_time = request.form.get('out_time', '')
             remarks = request.form.get('remarks', '')
+
+            # 处理空值
+            per_box_num = int(per_box_num) if per_box_num else None
+            box_num = int(box_num) if box_num else None
 
             # 简化时间处理
             if not user_input_time:
@@ -579,8 +608,8 @@ def out_stock():
             
             # 插入出库记录
             conn.execute(
-                'INSERT INTO warehouse_out (product_model, material, out_quantity, customer_unit, out_time, remarks) VALUES (?, ?, ?, ?, ?, ?)',
-                (product_model, material, out_quantity, customer_unit, out_time, remarks)
+                'INSERT INTO warehouse_out (product_model, material, per_box_num, box_num, out_quantity, customer_unit, out_time, remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                (product_model, material, per_box_num, box_num, out_quantity, customer_unit, out_time, remarks)
             )
             # 更新库存
             new_quantity = stock['stock_quantity'] - out_quantity

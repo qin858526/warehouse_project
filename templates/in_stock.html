@@ -383,6 +383,17 @@
             background: #f44336;
             color: white;
         }
+        .form-input {
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%;
+            max-width: 300px;
+        }
+        @media (max-width: 768px) {
+            .form-input {
+                max-width: 100%;
+            }
+        }
     </style>
     <!-- 路径保持你实际的目录结构 -->
     <link rel="stylesheet" href="/static/laydate/theme/default/laydate.css">
@@ -496,9 +507,17 @@
                     <option value="材质5">材质5</option>
                 </select>
             </div>
-            <div class="form-item">
-                <label for="in_quantity">入库数量：</label>
-                <input type="number" name="in_quantity" id="in_quantity" min="1" required placeholder="请输入数量">
+            <div class="form-group">
+                <label>数量信息：</label>
+                <!-- 新增：每箱数量 -->
+                <input type="number" name="per_box_num" id="per_box_num" placeholder="每箱数量（可为空）" 
+                    class="form-input" oninput="calcTotalNum()">
+                <!-- 新增：箱数 -->
+                <input type="number" name="box_num" id="box_num" placeholder="箱数（可为空）" 
+                    class="form-input" oninput="calcTotalNum()">
+                <!-- 总数量（自动计算/手动编辑） -->
+                <input type="number" name="in_quantity" id="in_quantity" min="1" required placeholder="请输入数量" 
+                    class="form-input" oninput="clearBoxNums()">
             </div>
             <div class="form-item">
                 <label for="in_time">入库时间：</label>
@@ -855,7 +874,30 @@
                     }
                 });
         }
-
+        // ========== 新增：自动计算相关函数 ==========
+        function calcTotalNum() {
+            const perBox = document.getElementById('per_box_num').value || 0;
+            const box = document.getElementById('box_num').value || 0;
+            const totalInput = document.getElementById('in_quantity');
+            // 仅当总数量未手动输入时，自动计算
+            if (!totalInput.dataset.manualEdit) {
+                totalInput.value = perBox * box;
+            }
+        }
+        // 手动编辑总数量：清空前两个输入框
+        function clearBoxNums() {
+            const totalInput = document.getElementById('in_quantity');
+            // 标记为手动编辑，避免自动计算覆盖
+            totalInput.dataset.manualEdit = 'true';
+            document.getElementById('per_box_num').value = '';
+            document.getElementById('box_num').value = '';
+        }
+        // 重置手动编辑标记（当清空总数量时）
+        document.getElementById('in_quantity').addEventListener('change', function() {
+            if (!this.value) {
+                this.dataset.manualEdit = 'false';
+            }
+        });
     </script>
 </body>
 </html>

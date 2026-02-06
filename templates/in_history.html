@@ -95,7 +95,9 @@
                 <th>ID</th>
                 <th>产品型号</th>
                 <th>材质</th>
-                <th>入库数量</th>
+                <th>每箱数量</th>  <!-- 新增 -->
+                <th>箱数</th>      <!-- 新增 -->
+                <th>入库总数</th>
                 <th>入库时间</th>
                 <th>备注</th>
             </tr>
@@ -106,6 +108,8 @@
                 <td>{{ record.id }}</td>
                 <td>{{ record.product_model }}</td>
                 <td>{{ record.material }}</td>
+                <td>{{ record.per_box_num or '-' }}</td>
+                <td>{{ record.box_num or '-' }}</td>
                 <td>{{ record.in_quantity }}</td>
                 <td>{{ record.in_time }}</td>
                 <td>{{ record.remarks or '-' }}</td>
