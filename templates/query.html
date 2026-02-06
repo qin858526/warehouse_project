@@ -314,7 +314,9 @@
                             <thead>
                                 <tr>
                                     <th>操作类型</th>
-                                    <th>数量</th>
+                                    <th>箱数</th>
+                                    <th>每箱数量</th>
+                                    <th>入/出库数量</th>
                                     <th>客户/供应商</th>
                                     <th>操作时间（仅显示最新10条记录）</th>
                                     <th>备注</th>
@@ -490,6 +492,8 @@
                                     tr.className = record.type === '入库' ? 'in-record' : 'out-record';
                                     tr.innerHTML = `
                                         <td>${record.type}</td>
+                                        <td>${record.box_num}</td>
+                                        <td>${record.per_box_num}</td>
                                         <td>${record.quantity}</td>
                                         <td>${record.unit || '-'}</td>
                                         <td>${record.operate_time}</td>
