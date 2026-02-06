@@ -452,17 +452,21 @@
                     <option value="材质5">材质5</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>数量信息：</label>
+            <div class="form-item">
+                <label>每箱数量：</label>
                 <!-- 新增：每箱数量 -->
                 <input type="number" name="per_box_num" id="per_box_num" placeholder="每箱数量（可为空）" 
                     class="form-input" oninput="calcTotalNum()">
-                <!-- 新增：箱数 -->
+            </div>
+            <div class="form-item">
+                <label for="box_num">箱数：</label>
                 <input type="number" name="box_num" id="box_num" placeholder="箱数（可为空）" 
                     class="form-input" oninput="calcTotalNum()">
-                <!-- 总数量（自动计算/手动编辑） -->
-                <input type="number" name="out_quantity" id="out_quantity" min="1" required placeholder="请输入数量" 
-                    class="form-input" oninput="clearBoxNums()">
+            </div>
+            <div class="form-item">
+                <label for="out_quantity">出库总数：</label>
+                <input type="number" name="out_quantity" id="out_quantity" placeholder="请输入出库总数" required
+                       class="form-input" onchange="clearBoxNums()">
             </div>
             <div class="form-item">
                 <label for="customer_unit">客户单位：</label>
@@ -657,7 +661,6 @@
                 .then(response => response.json())
                 .then(res => {
                     if (res.code === 200) {
-                        {# showModal('success', res.msg); #}
                         resetCustomerForm();
                         loadCustomer();
                     } else {

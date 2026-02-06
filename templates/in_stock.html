@@ -92,6 +92,15 @@
                 flex-direction: column !important;
                 align-items: flex-start !important;
             }
+            .form-item.select-item {
+                flex-direction: row !important;
+                align-items: center !important;
+                flex-wrap: wrap !important;
+            }
+            .quantity-group {
+                flex-direction: row !important;
+                align-items: center !important;
+            }
             .form-item select {
                 width: 100% !important; /* 下拉框占满宽度 */
                 margin-bottom: 10px !important; /* 和按钮隔开 */
@@ -100,6 +109,7 @@
                 margin-left: 0 !important; /* 取消左间距 */
                 padding: 6px 10px !important; /* 减小按钮大小 */
                 font-size: 14px !important;
+                margin-top: 10px !important;
             }
 
             /* 弹窗关闭按钮：适配手机点击 */
@@ -107,6 +117,11 @@
                 padding: 8px 15px !important;
                 font-size: 14px !important;
                 width: 80% !important; /* 按钮占80%宽度，方便点击 */
+            }
+            /* 数量组手机端适配 */
+            .quantity-group .form-input {
+                width: 100% !important;
+                max-width: 120px !important;
             }
         }
         body {
@@ -123,6 +138,18 @@
         }
         .form-item {
             margin: 15px 0;
+            display: flex;
+            align-items: center;
+        }
+        /* 下拉框项特殊样式 */
+        .form-item.select-item {
+            align-items: center;
+        }
+        /* 数量组：箱数+每箱数量一排 */
+        .quantity-group {
+            display: flex;
+            align-items: center;
+            gap: 20px; /* 两个输入框之间的间距 */
         }
         label {
             display: inline-block;
@@ -173,18 +200,6 @@
             margin-top: 20px;
             color: #4285F4;
             text-decoration: none;
-        }
-        @media (max-width: 768px) {
-            .form-container {
-                width: 80%;
-            }
-            label, .time-input-group {
-                width: 100%;
-                box-sizing: border-box;
-            }
-            .time-input {
-                width: 100%;
-            }
         }
 
         /* ========== 新增：修复laydate按钮重叠样式 ========== */
@@ -384,15 +399,11 @@
             color: white;
         }
         .form-input {
-            margin: 5px 0;
+            margin: 0 5px;
             padding: 8px;
             width: 100%;
-            max-width: 300px;
-        }
-        @media (max-width: 768px) {
-            .form-input {
-                max-width: 100%;
-            }
+            max-width: 150px;
+            box-sizing: border-box;
         }
     </style>
     <!-- 路径保持你实际的目录结构 -->
@@ -484,7 +495,7 @@
 
     <div class="form-container">
         <form method="POST">
-            <div class="form-item">
+            <div class="form-item select-item">
                 <label for="product_model">产品型号：</label>
                 <select name="product_model" id="product_model" required>
                     <option value="">请选择型号</option>
@@ -496,7 +507,7 @@
                 <!-- 新增：产品类型管理按钮 -->
                 <button type="button" class="manage-btn" onclick="openTypeManageModal()">管理产品类型</button>
             </div>
-            <div class="form-item">
+            <div class="form-item select-item">
                 <label for="material">材质：</label>
                 <select name="material" id="material" required>
                     <option value="">请选择材质</option>
@@ -507,17 +518,43 @@
                     <option value="材质5">材质5</option>
                 </select>
             </div>
-            <div class="form-group">
+            {# <!-- 修复：箱数+每箱数量一排 -->
+            <div class="form-item">
                 <label>数量信息：</label>
+                <div class="quantity-group">
+                    <div>
+                        <label style="width: auto; font-weight: normal;">每箱数量：</label>
+                        <input type="number" name="per_box_num" id="per_box_num" placeholder="每箱数量" 
+                            class="form-input" min="0" oninput="calcTotalNum()">
+                    </div>
+                    <div>
+                        <label style="width: auto; font-weight: normal;">箱数：</label>
+                        <input type="number" name="box_num" id="box_num" placeholder="箱数" 
+                            class="form-input" min="0" oninput="calcTotalNum()">
+                    </div>
+                </div>
+            </div>
+            <!-- 总数量单独一排 -->
+            <div class="form-item">
+                <label for="in_quantity">入库总数：</label>
+                <input type="number" name="in_quantity" id="in_quantity" placeholder="请输入入库总数" required
+                       class="form-input" min="1" oninput="clearBoxNums()">
+            </div> #}
+            <div class="form-item">
+                <label>每箱数量：</label>
                 <!-- 新增：每箱数量 -->
                 <input type="number" name="per_box_num" id="per_box_num" placeholder="每箱数量（可为空）" 
                     class="form-input" oninput="calcTotalNum()">
-                <!-- 新增：箱数 -->
+            </div>
+            <div class="form-item">
+                <label for="box_num">箱数：</label>
                 <input type="number" name="box_num" id="box_num" placeholder="箱数（可为空）" 
                     class="form-input" oninput="calcTotalNum()">
-                <!-- 总数量（自动计算/手动编辑） -->
-                <input type="number" name="in_quantity" id="in_quantity" min="1" required placeholder="请输入数量" 
-                    class="form-input" oninput="clearBoxNums()">
+            </div>
+            <div class="form-item">
+                <label for="in_quantity">入库总数：</label>
+                <input type="number" name="in_quantity" id="in_quantity" placeholder="请输入入库总数" required
+                       class="form-input" onchange="clearBoxNums()">
             </div>
             <div class="form-item">
                 <label for="in_time">入库时间：</label>
@@ -586,6 +623,9 @@
                 {% endfor %}
               {% endif %}
             {% endwith %}
+
+            // 初始化手动编辑标记
+            document.getElementById('in_quantity').dataset.manualEdit = 'false';
         });
         
 
@@ -874,30 +914,33 @@
                     }
                 });
         }
-        // ========== 新增：自动计算相关函数 ==========
+
+        // ========== 修复：自动计算相关函数 ==========
         function calcTotalNum() {
-            const perBox = document.getElementById('per_box_num').value || 0;
-            const box = document.getElementById('box_num').value || 0;
+            // 严格转换为数值类型，避免字符串相乘问题
+            const perBox = Number(document.getElementById('per_box_num').value) || 0;
+            const box = Number(document.getElementById('box_num').value) || 0;
             const totalInput = document.getElementById('in_quantity');
-            // 仅当总数量未手动输入时，自动计算
-            if (!totalInput.dataset.manualEdit) {
-                totalInput.value = perBox * box;
+            
+            // 只有未手动编辑总数量时，才自动计算
+            if (totalInput.dataset.manualEdit === 'false') {
+                // 只有两个值都大于0时才计算，避免显示0
+                totalInput.value = (perBox > 0 && box > 0) ? (perBox * box) : '';
             }
         }
-        // 手动编辑总数量：清空前两个输入框
+
+        // 手动编辑总数量：清空前两个输入框，并标记为手动编辑
         function clearBoxNums() {
             const totalInput = document.getElementById('in_quantity');
-            // 标记为手动编辑，避免自动计算覆盖
-            totalInput.dataset.manualEdit = 'true';
-            document.getElementById('per_box_num').value = '';
-            document.getElementById('box_num').value = '';
-        }
-        // 重置手动编辑标记（当清空总数量时）
-        document.getElementById('in_quantity').addEventListener('change', function() {
-            if (!this.value) {
-                this.dataset.manualEdit = 'false';
+            if (totalInput.value) {
+                totalInput.dataset.manualEdit = 'true';
+                document.getElementById('per_box_num').value = '';
+                document.getElementById('box_num').value = '';
+            } else {
+                // 清空总数量时，重置手动编辑标记
+                totalInput.dataset.manualEdit = 'false';
             }
-        });
+        }
     </script>
 </body>
 </html>
