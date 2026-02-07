@@ -690,7 +690,7 @@ def get_stock_records():
 
         # 1. 查询入库记录（匹配你的warehouse_in表结构）
         cursor.execute('''
-            SELECT '入库' as type, in_quantity as quantity, '' as unit, in_time as operate_time, remarks 
+            SELECT '入库' as type, box_num as box_num, per_box_num as per_box_num, in_quantity as quantity, '' as unit, in_time as operate_time, remarks 
             FROM warehouse_in 
             WHERE product_model = ? AND material = ?
             ORDER BY in_time DESC
@@ -700,7 +700,7 @@ def get_stock_records():
 
         # 2. 查询出库记录（匹配你的warehouse_out表结构，unit对应customer_unit）
         cursor.execute('''
-            SELECT '出库' as type, out_quantity as quantity, customer_unit as unit, out_time as operate_time, remarks 
+            SELECT '出库' as type, box_num as box_num, per_box_num as per_box_num, out_quantity as quantity, customer_unit as unit, out_time as operate_time, remarks 
             FROM warehouse_out 
             WHERE product_model = ? AND material = ?
             ORDER BY out_time DESC
