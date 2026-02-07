@@ -490,8 +490,8 @@ def in_stock():
             user_input_time = request.form.get('in_time', '')
             remarks = request.form.get('remarks', '')
             #   处理空值
-            per_box_num = int(per_box_num) if per_box_num else None
-            box_num = int(box_num) if box_num else None
+            per_box_num = int(per_box_num) if per_box_num else '-'
+            box_num = int(box_num) if box_num else '-'
 
             # 2. 简化时间处理：兼容任意格式，失败则用当前时间
             if not user_input_time:

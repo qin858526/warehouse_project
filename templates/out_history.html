@@ -105,11 +105,22 @@
         <tbody>
             {% for record in out_records %}
             <tr>
+                {% if record.box_num is none %}
+                    {% set box_num = '-' %}
+                {% else %}
+                    {% set box_num = record.box_num %}
+                {% endif %}
+                {# 每箱数量同理处理 #}
+                {% if record.per_box_num is none %}
+                    {% set per_box_num = '-' %}
+                {% else %}
+                    {% set per_box_num = record.per_box_num %}
+                {% endif %}
                 <td>{{ record.id }}</td>
                 <td>{{ record.product_model }}</td>
                 <td>{{ record.material }}</td>
-                <td>{{ record.per_box_num or '-' }}</td>
-                <td>{{ record.box_num or '-' }}</td>
+                <td>{{ per_box_num }}</td>
+                <td>{{ box_num }}</td>
                 <td>{{ record.out_quantity }}</td>
                 <td>{{ record.customer_unit }}</td>
                 <td>{{ record.out_time }}</td>
