@@ -490,6 +490,8 @@
                                 data.records.forEach(record => {
                                     const tr = document.createElement('tr');
                                     tr.className = record.type === '入库' ? 'in-record' : 'out-record';
+                                    if (record.box_num === null) record.box_num = '-';
+                                    if (record.per_box_num === null) record.per_box_num = '-';
                                     tr.innerHTML = `
                                         <td>${record.type}</td>
                                         <td>${record.box_num}</td>
