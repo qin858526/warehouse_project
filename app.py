@@ -493,7 +493,7 @@ def in_stock():
             per_box_num = int(per_box_num) if per_box_num else '-'
             box_num = int(box_num) if box_num else '-'
 
-            # 2. 简化时间处理：兼容任意格式，失败则用当前时间
+            # 简化时间处理：兼容任意格式，失败则用当前时间
             if not user_input_time:
                 in_time = datetime.now()
             else:
@@ -505,10 +505,15 @@ def in_stock():
                         in_time = datetime.strptime(user_input_time, '%Y-%m-%dT%H:%M')
                     except:
                         in_time = datetime.now()
-
-            # 3. 数据库操作（确保执行到提交）
+            # 检查型号和材质是否在型号表和材质表中（避免用户篡改表单提交不存在的型号/材质）
+            if product_model not in product_models:
+                flash('错误：提交的产品型号不存在！', 'error')  # 新增error分类
+                return redirect(url_for('in_stock'))
+            if material not in materials:
+                flash('错误：提交的材质不存在！', 'error')  # 新增error分类
+                return redirect(url_for('in_stock'))
+            # 数据库操作（确保执行到提交）
             # 入库接口的数据库操作部分（修改后）
-            conn = get_db_connection()
             # 调试日志1：打印要插入的数据
             print(f"准备插入入库数据：{product_model}, {material}, {per_box_num}, {box_num}, {in_quantity}, {in_time}")
             # 插入入库记录
