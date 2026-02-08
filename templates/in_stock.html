@@ -405,6 +405,42 @@
             max-width: 150px;
             box-sizing: border-box;
         }
+
+        /* 可搜索下拉框hover/选中样式 */
+        .dropdown-option:hover {
+            background-color: #f5f7fa;
+        }
+        .dropdown-option.active {
+            background-color: #4285F4;
+            color: #fff;
+        }
+        /* 解决移动端下拉框溢出问题 */
+        @media (max-width: 768px) {
+            .search-select-wrapper {
+                width: 100% !important;
+                min-width: unset !important;
+            }
+            .search-select-dropdown {
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            /* 管理按钮换行 */
+            .form-item.select-item {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+            .manage-btn {
+                margin-left: 0 !important;
+                margin-top: 10px !important;
+            }
+        }
+        /* 非移动端优化间距 */
+        @media (min-width: 769px) {
+            .form-item.select-item {
+                gap: 10px;
+            }
+        }
+
     </style>
     <!-- 路径保持你实际的目录结构 -->
     <link rel="stylesheet" href="/static/laydate/theme/default/laydate.css">
@@ -497,15 +533,28 @@
         <form method="POST">
             <div class="form-item select-item">
                 <label for="product_model">产品型号：</label>
-                <input type="text" id="modelSearch" placeholder="输入型号搜索..." style="margin-bottom:8px; width:220px;">
-                <select name="product_model" id="product_model" required>
-                    <option value="">请选择型号</option>
-                    <option value="型号A">型号A</option>
-                    <option value="型号B">型号B</option>
-                    <option value="型号C">型号C</option>
-                    <option value="型号D">型号D</option>
-                </select>
-                <!-- 新增：产品类型管理按钮 -->
+                <!-- 自定义可搜索下拉组件 -->
+                <div class="search-select-wrapper" style="position: relative; flex: 1; min-width: 220px;">
+                    <!-- 搜索输入框 -->
+                    <input 
+                        type="text" 
+                        class="search-select-input" 
+                        id="modelSearchInput" 
+                        placeholder="请输入/选择产品型号" 
+                        readonly="readonly"
+                        onclick="toggleModelDropdown()"
+                        style="width: 100%; padding: 8px 30px 8px 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; cursor: pointer;"
+                    >
+                    <!-- 下拉箭头图标 -->
+                    <span class="dropdown-arrow" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #666; pointer-events: none;">▼</span>
+                    <!-- 下拉列表容器 -->
+                    <div class="search-select-dropdown" id="modelDropdown" style="position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: #fff; border: 1px solid #ccc; border-top: none; border-radius: 0 0 5px 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 999; display: none;">
+                        <!-- 下拉选项（动态渲染） -->
+                    </div>
+                    <!-- 隐藏的真实表单字段（用于提交） -->
+                    <input type="hidden" name="product_model" id="realProductModel" required>
+                </div>
+                <!-- 保留管理按钮 -->
                 <button type="button" class="manage-btn" onclick="openTypeManageModal()">管理产品类型</button>
             </div>
             <div class="form-item select-item">
@@ -583,6 +632,104 @@
             const calendarIcon = document.getElementById('calendarIcon');
 
             refreshSelectOptions(); // 页面加载时刷新下拉框选项
+
+            // 全局变量：控制下拉框状态
+            let modelDropdownOpen = false;
+
+            // 切换下拉框显示/隐藏
+            window.toggleModelDropdown = function() {
+                const dropdown = document.getElementById('modelDropdown');
+                const input = document.getElementById('modelSearchInput');
+                // 显示下拉框时，取消只读，聚焦输入框
+                if (!modelDropdownOpen) {
+                    dropdown.style.display = 'block';
+                    input.readOnly = false;
+                    input.focus();
+                    // 输入框聚焦后，选中现有文本（方便快速替换）
+                    input.select();
+                } else {
+                    dropdown.style.display = 'none';
+                    // 若未选择任何值，恢复只读
+                    if (!document.getElementById('realProductModel').value) {
+                        input.readOnly = true;
+                        input.placeholder = '请输入/选择产品型号';
+                    }
+                }
+                modelDropdownOpen = !modelDropdownOpen;
+            }
+
+            // 实时搜索筛选下拉选项
+            document.getElementById('modelSearchInput').addEventListener('input', function(e) {
+                const keyword = e.target.value.trim().toLowerCase();
+                const options = document.querySelectorAll('#modelDropdown .dropdown-option');
+                options.forEach(option => {
+                    // 排除空值选项
+                    if (option.dataset.value === '') {
+                        option.style.display = keyword ? 'none' : 'block';
+                        return;
+                    }
+                    // 模糊匹配关键词
+                    const text = option.textContent.trim().toLowerCase();
+                    option.style.display = text.includes(keyword) ? 'block' : 'none';
+                });
+            });
+
+            // 选择下拉选项,绑定点击事件
+            // 事件委托：把点击事件绑定到父容器（modelDropdown）上
+            document.getElementById('modelDropdown').addEventListener('click', function(e) {
+                // 只处理点击.dropdown-option的情况
+                const option = e.target.closest('.dropdown-option');
+                if (!option) return;
+
+                const value = option.dataset.value;
+                const text = option.textContent.trim() || '请输入/选择产品型号';
+                // 更新输入框显示和真实表单值
+                document.getElementById('modelSearchInput').value = text === '&nbsp;' ? '' : text;
+                document.getElementById('realProductModel').value = value;
+                // 隐藏下拉框
+                document.getElementById('modelDropdown').style.display = 'none';
+                modelDropdownOpen = false;
+                // 若选择空值，恢复输入框只读
+                if (!value) {
+                    document.getElementById('modelSearchInput').readOnly = true;
+                }
+            });
+
+            // 点击页面其他区域关闭下拉框
+            document.addEventListener('click', function(e) {
+                const wrapper = document.querySelector('.search-select-wrapper');
+                if (!wrapper.contains(e.target)) {
+                    document.getElementById('modelDropdown').style.display = 'none';
+                    modelDropdownOpen = false;
+                    // 若未选择值，恢复只读
+                    const realValue = document.getElementById('realProductModel').value;
+                    if (!realValue) {
+                        document.getElementById('modelSearchInput').readOnly = true;
+                        document.getElementById('modelSearchInput').placeholder = '请输入/选择产品型号';
+                    }
+                }
+            });
+
+            // 适配响应式样式（补充到原有@media (max-width: 768px)中）
+            if (window.innerWidth <= 768) {
+                const wrapper = document.querySelector('.search-select-wrapper');
+                wrapper.style.minWidth = 'unset';
+                wrapper.style.width = '100%';
+                document.querySelector('.manage-btn').style.marginTop = '10px';
+            }
+    window.addEventListener('resize', function() {
+        const wrapper = document.querySelector('.search-select-wrapper');
+        if (window.innerWidth <= 768) {
+            wrapper.style.minWidth = 'unset';
+            wrapper.style.width = '100%';
+            document.querySelector('.manage-btn').style.marginTop = '10px';
+        } else {
+            wrapper.style.minWidth = '220px';
+            wrapper.style.width = 'auto';
+            document.querySelector('.manage-btn').style.marginTop = '0';
+        }
+    });
+
 
             if (!timeInput || !calendarIcon) {
                 alert('时间输入框元素未找到！');
@@ -847,7 +994,7 @@
                 .then(res => {
                     if (res.code === 200) {
                         {# showModal('success', res.msg); #}
-                        resetModelForm();
+                        resetMaterialForm();
                         loadMaterials();
                     } else {
                         showModal('error', res.msg);
@@ -889,13 +1036,17 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.code === 200) {
-                        const modelSelect = document.getElementById('product_model');
+                        const modelSelect = document.getElementById('modelDropdown');
                         modelSelect.innerHTML = '<option value="">请选择型号</option>';
+                        // 循环创建自定义下拉选项（div而非option）
                         data.data.forEach(model => {
-                            const option = document.createElement('option');
-                            option.value = model.name;
-                            option.textContent = model.name;
-                            modelSelect.appendChild(option);
+                            const optionDiv = document.createElement('div');
+                            optionDiv.className = 'dropdown-option'; // 匹配自定义样式类
+                            optionDiv.dataset.value = model.name; // 存储值（和原逻辑一致用name）
+                            optionDiv.textContent = model.name; // 显示文本
+                            optionDiv.style.padding = '8px 10px';
+                            optionDiv.style.cursor = 'pointer';
+                            modelDropdown.appendChild(optionDiv);
                         });
                     }
                 });
@@ -942,22 +1093,6 @@
                 totalInput.dataset.manualEdit = 'false';
             }
         }
-    
-    // 监听型号搜索输入
-    document.getElementById('modelSearch').addEventListener('input', function(e) {
-        const keyword = e.target.value.trim().toLowerCase();
-        const options = document.querySelectorAll('#product_model option');
-        options.forEach(option => {
-            // 排除默认的"请选择型号"选项
-            if (option.value === '') {
-                option.style.display = 'block';
-                return;
-            }
-            // 匹配关键词（不区分大小写）
-            const text = option.textContent.toLowerCase();
-            option.style.display = text.includes(keyword) ? 'block' : 'none';
-        });
-    });
     </script>
 </body>
 </html>
