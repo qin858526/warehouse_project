@@ -470,7 +470,6 @@ def in_stock():
     conn = get_db_connection()
     models = conn.execute('SELECT model_name FROM product_models ORDER BY id DESC').fetchall()
     materials = conn.execute('SELECT material_name FROM material_types ORDER BY id DESC').fetchall()
-    conn.close()
     # 转换为列表
     product_models = [row['model_name'] for row in models]
     materials = [row['material_name'] for row in materials]
