@@ -497,6 +497,7 @@
         <form method="POST">
             <div class="form-item select-item">
                 <label for="product_model">产品型号：</label>
+                <input type="text" id="modelSearch" placeholder="输入型号搜索..." style="margin-bottom:8px; width:220px;">
                 <select name="product_model" id="product_model" required>
                     <option value="">请选择型号</option>
                     <option value="型号A">型号A</option>
@@ -941,6 +942,22 @@
                 totalInput.dataset.manualEdit = 'false';
             }
         }
+    
+    // 监听型号搜索输入
+    document.getElementById('modelSearch').addEventListener('input', function(e) {
+        const keyword = e.target.value.trim().toLowerCase();
+        const options = document.querySelectorAll('#product_model option');
+        options.forEach(option => {
+            // 排除默认的"请选择型号"选项
+            if (option.value === '') {
+                option.style.display = 'block';
+                return;
+            }
+            // 匹配关键词（不区分大小写）
+            const text = option.textContent.toLowerCase();
+            option.style.display = text.includes(keyword) ? 'block' : 'none';
+        });
+    });
     </script>
 </body>
 </html>
