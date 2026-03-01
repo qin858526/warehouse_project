@@ -428,7 +428,7 @@ def query_total():
 
     # 添加分页限制
     query += " LIMIT ? OFFSET ?"
-    params.extend([per_page, (page - 1) * per_page])
+    params.extend([per_page, offset])
     cursor.execute(query, params)
     stocks = cursor.fetchall()  # 实际项目中建议转换为字典列表
     
@@ -637,18 +637,32 @@ def out_stock():
 # 历史入库查询
 @app.route('/query_in_history', methods=['GET'])
 def query_in_history():
+
+    # 筛选参数
+    product_model = request.args.get('product_model', '').strip()  # 手动输入参数
+    material = request.args.get('material', '').strip()  # 手动输入参数
+
     page = request.args.get('page', 1, type=int)
     per_page = 20
     offset = (page - 1) * per_page
+    # 基础SQL
+    query_sql = "SELECT * FROM warehouse_in WHERE 1=1"
+    params = []
+    if product_model:
+        query_sql += " AND product_model LIKE ?"
+        params.append(f'%{product_model}%')
+    if material:
+        query_sql += " AND material LIKE ?"
+        params.append(f'%{material}%')
     conn = get_db_connection()
+    total_count = conn.execute(query_sql.replace("*", "COUNT(*)"), params).fetchone()[0] # 先查询总条数
+    total_pages = max(1, (total_count + per_page - 1) // per_page)  # 计算总页数
     in_records = conn.execute(
-        'SELECT * FROM warehouse_in ORDER BY in_time DESC LIMIT ? OFFSET ?',
-        (per_page, offset)
+        query_sql + ' ORDER BY in_time DESC LIMIT ? OFFSET ?',
+        params + [per_page, offset]
     ).fetchall()
-    total_count = conn.execute('SELECT COUNT(*) FROM warehouse_in').fetchone()[0]
     conn.close()
 
-    total_pages = math.ceil(total_count / per_page)
     return render_template(
         'in_history.html',
         in_records=in_records,
@@ -659,19 +673,31 @@ def query_in_history():
 # 历史出库查询
 @app.route('/query_out_history', methods=['GET'])
 def query_out_history():
+
+    # 筛选参数
+    product_model = request.args.get('product_model', '').strip()  # 手动输入参数
+    material = request.args.get('material', '').strip()  # 手动输入参数
+
     page = request.args.get('page', 1, type=int)
     per_page = 20
     offset = (page - 1) * per_page
-
+    query_sql = "SELECT * FROM warehouse_out WHERE 1=1"
+    params = []
+    if product_model:
+        query_sql += " AND product_model LIKE ?"
+        params.append(f'%{product_model}%')
+    if material:
+        query_sql += " AND material LIKE ?"
+        params.append(f'%{material}%')
     conn = get_db_connection()
+    total_count = conn.execute(query_sql.replace("*", "COUNT(*)"), params).fetchone()[0] # 先查询总条数
+    total_pages = max(1, (total_count + per_page - 1) // per_page)  # 计算总页数
     out_records = conn.execute(
-        'SELECT * FROM warehouse_out ORDER BY out_time DESC LIMIT ? OFFSET ?',
-        (per_page, offset)
+        query_sql + ' ORDER BY out_time DESC LIMIT ? OFFSET ?',
+        params + [per_page, offset]
     ).fetchall()
-    total_count = conn.execute('SELECT COUNT(*) FROM warehouse_out').fetchone()[0]
     conn.close()
 
-    total_pages = math.ceil(total_count / per_page)
     return render_template(
         'out_history.html',
         out_records=out_records,

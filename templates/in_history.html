@@ -85,10 +85,87 @@
             cursor: not-allowed;
             pointer-events: none;
         }
+        /* 筛选表单样式*/
+        .filter-panel {
+            margin: 10px auto 20px;
+            padding: 15px;
+            width: 95%;
+            border: 1px solid #bdbdbd;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        .filter-panel .form-item {
+            margin-right: 20px;
+            display: inline-block;
+        }
+        .filter-panel label {
+            margin-right: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        .filter-panel input {
+            padding: 6px 8px;
+            border: 1px solid #bdbdbd;
+            border-radius: 4px;
+            width: 180px;
+        }
+        .filter-panel button {
+            padding: 6px 16px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .filter-btn1 {
+            background-color: #4285F4;
+            color: white;
+        }
+        .filter-btn1:hover {
+            background-color: #3367D6;
+        }
+        .reset-btn {
+            background-color: #e3e3e3;
+            color: #333;
+        }
+        .reset-btn:hover {
+            background-color: #d0d0d0;
+        }
+        
+        .table-header {
+            position: relative; /* 用于下拉菜单定位 */
+        }
+        .filter-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: 5px;
+            color: #666;
+        }
+
     </style>
 </head>
 <body>
     <h1>历史入库记录</h1>
+    <!-- 筛选表单 -->
+    <div class="filter-panel">
+        <form method="GET" action="/query_in_history">
+            <div class="form-item">
+                <label>产品型号：</label>
+                <input type="text" name="product_model" placeholder="模糊查询型号" 
+                       value="{{ request.args.get('product_model', '') }}">
+            </div>
+            <div class="form-item">
+                <label>材质：</label>
+                <input type="text" name="material" placeholder="模糊查询材质" 
+                       value="{{ request.args.get('material', '') }}">
+            </div>
+            <!-- 隐藏字段：保留当前页码，筛选后回到第1页 -->
+            <input type="hidden" name="page" value="1">
+            <button type="submit" class="filter-btn1">筛选</button>
+            <button type="button" class="reset-btn" onclick="window.location.href='/query_in_history'">重置</button>
+        </form>
+    </div>
     <table class="in-history-table">
         <thead>
             <tr>
