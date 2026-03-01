@@ -362,6 +362,7 @@
                {% if request.args.get('stock_max') %}&stock_max={{ request.args.get('stock_max') }}{% endif %}" 
            class="{{ 'disabled' if current_page >= total_pages else '' }}">下一页</a>
         <span>共 {{ total_pages }} 页</span>
+        <span>共 {{ total }} 条记录</span>
     </div>
 
     <a href="{{ url_for('index') }}" class="back-btn">← 返回首页</a>

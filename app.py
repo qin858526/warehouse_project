@@ -455,6 +455,7 @@ def query_total():
         'query.html',
         stocks=stocks,
         current_page=page,
+        total=total,
         total_pages=total_pages,
         all_models=all_models,
         all_materials=all_materials
@@ -667,6 +668,7 @@ def query_in_history():
         'in_history.html',
         in_records=in_records,
         current_page=page,
+        total_count=total_count,
         total_pages=total_pages
     )
 
@@ -702,6 +704,7 @@ def query_out_history():
         'out_history.html',
         out_records=out_records,
         current_page=page,
+        total_count=total_count,
         total_pages=total_pages
     )
 # ========== 新增：查询产品+材质的入库/出库记录接口（不影响原有功能） ==========
